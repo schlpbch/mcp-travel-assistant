@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "travel-assistant"
-version = "2.1.0"
+version = "2.2.0"
 description = "Unified MCP server providing comprehensive travel planning services"
 authors = [
     {name = "Travel Concierge Team", email = "support@travelconcierge.com"}
