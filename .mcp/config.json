@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "travel-assistant": {
+      "command": "python",
+      "args": ["-m", "travel_assistant.server"],
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      }
+    }
+  }
+}
