@@ -959,31 +959,56 @@ def get_weather_forecast(latitude: float, longitude: float, hourly: bool = False
         if hourly:
             hourly_data = data.get("hourly", {})
             times = hourly_data.get("time", [])
-            for idx, t in enumerate(times):
+
+            # Pre-extract all arrays once (O(1) per array)
+            temps = hourly_data.get("temperature_2m", [])
+            humidities = hourly_data.get("relative_humidity_2m", [])
+            apparent_temps = hourly_data.get("apparent_temperature", [])
+            precip_probs = hourly_data.get("precipitation_probability", [])
+            windspeeds = hourly_data.get("windspeed_10m", [])
+            winddir = hourly_data.get("winddirection_10m", [])
+            weathercodes = hourly_data.get("weathercode", [])
+
+            # Parallel iteration with zip (O(n) total, not O(n*m))
+            for t, temp, humidity, apparent_temp, precip_prob, windspeed, wind_direction, weathercode in zip(
+                times, temps, humidities, apparent_temps, precip_probs, windspeeds, winddir, weathercodes
+            ):
                 result_periods.append({
                     "time": t,
-                    "temperature_c": (hourly_data.get("temperature_2m") or [None])[idx] if idx < len(hourly_data.get("temperature_2m", [])) else None,
-                    "relative_humidity": (hourly_data.get("relative_humidity_2m") or [None])[idx] if idx < len(hourly_data.get("relative_humidity_2m", [])) else None,
-                    "apparent_temperature_c": (hourly_data.get("apparent_temperature") or [None])[idx] if idx < len(hourly_data.get("apparent_temperature", [])) else None,
-                    "precipitation_probability": (hourly_data.get("precipitation_probability") or [None])[idx] if idx < len(hourly_data.get("precipitation_probability", [])) else None,
-                    "windspeed_10m": (hourly_data.get("windspeed_10m") or [None])[idx] if idx < len(hourly_data.get("windspeed_10m", [])) else None,
-                    "winddirection_10m": (hourly_data.get("winddirection_10m") or [None])[idx] if idx < len(hourly_data.get("winddirection_10m", [])) else None,
-                    "weathercode": (hourly_data.get("weathercode") or [None])[idx] if idx < len(hourly_data.get("weathercode", [])) else None,
+                    "temperature_c": temp,
+                    "relative_humidity": humidity,
+                    "apparent_temperature_c": apparent_temp,
+                    "precipitation_probability": precip_prob,
+                    "windspeed_10m": windspeed,
+                    "winddirection_10m": wind_direction,
+                    "weathercode": weathercode,
                 })
             units = data.get("hourly_units", {})
             forecast_meta = {"units": units}
         else:
             daily_data = data.get("daily", {})
             times = daily_data.get("time", [])
-            for idx, t in enumerate(times):
+
+            # Pre-extract all arrays once (O(1) per array)
+            temp_maxes = daily_data.get("temperature_2m_max", [])
+            temp_mins = daily_data.get("temperature_2m_min", [])
+            precip_sums = daily_data.get("precipitation_sum", [])
+            sunrises = daily_data.get("sunrise", [])
+            sunsets = daily_data.get("sunset", [])
+            uv_indices = daily_data.get("uv_index_max", [])
+
+            # Parallel iteration with zip (O(n) total, not O(n*m))
+            for t, temp_max, temp_min, precip_sum, sunrise, sunset, uv_index in zip(
+                times, temp_maxes, temp_mins, precip_sums, sunrises, sunsets, uv_indices
+            ):
                 result_periods.append({
                     "date": t,
-                    "temp_max_c": (daily_data.get("temperature_2m_max") or [None])[idx] if idx < len(daily_data.get("temperature_2m_max", [])) else None,
-                    "temp_min_c": (daily_data.get("temperature_2m_min") or [None])[idx] if idx < len(daily_data.get("temperature_2m_min", [])) else None,
-                    "precipitation_sum_mm": (daily_data.get("precipitation_sum") or [None])[idx] if idx < len(daily_data.get("precipitation_sum", [])) else None,
-                    "sunrise": (daily_data.get("sunrise") or [None])[idx] if idx < len(daily_data.get("sunrise", [])) else None,
-                    "sunset": (daily_data.get("sunset") or [None])[idx] if idx < len(daily_data.get("sunset", [])) else None,
-                    "uv_index_max": (daily_data.get("uv_index_max") or [None])[idx] if idx < len(daily_data.get("uv_index_max", [])) else None,
+                    "temp_max_c": temp_max,
+                    "temp_min_c": temp_min,
+                    "precipitation_sum_mm": precip_sum,
+                    "sunrise": sunrise,
+                    "sunset": sunset,
+                    "uv_index_max": uv_index,
                 })
             units = data.get("daily_units", {})
             forecast_meta = {"units": units}
