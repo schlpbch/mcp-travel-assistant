@@ -4,9 +4,26 @@ import os
 import uuid
 import requests
 from typing import Dict, Optional, Any
+from datetime import datetime
 
 from geopy.geocoders import Nominatim
 from geopy.extra.rate_limiter import RateLimiter
+
+# Module-level geolocator (initialized once, reused across requests)
+_GEOLOCATOR_INSTANCE = None
+
+
+def _get_or_create_geolocator():
+    """Get or create a module-level geolocator instance (lazy initialization)."""
+    global _GEOLOCATOR_INSTANCE
+    if _GEOLOCATOR_INSTANCE is None:
+        email_identifier = f"{uuid.uuid4()}.com"
+        geolocator = Nominatim(user_agent=email_identifier)
+        _GEOLOCATOR_INSTANCE = (
+            RateLimiter(geolocator.geocode, min_delay_seconds=1),
+            RateLimiter(geolocator.reverse, min_delay_seconds=1),
+        )
+    return _GEOLOCATOR_INSTANCE
 
 
 def get_serpapi_key() -> str:
@@ -26,13 +43,35 @@ def get_exchange_rate_api_key() -> str:
 
 
 def get_geolocator():
-    """Initialize and return a geolocator with rate limiting."""
-    email_identifier = f"{uuid.uuid4()}.com"
-    geolocator = Nominatim(user_agent=email_identifier)
-    return (
-        RateLimiter(geolocator.geocode, min_delay_seconds=1),
-        RateLimiter(geolocator.reverse, min_delay_seconds=1),
-    )
+    """Get geolocator with rate limiting (cached across requests)."""
+    return _get_or_create_geolocator()
+
+
+def format_amadeus_response(response_body: Dict[str, Any]) -> Dict[str, Any]:
+    """Format Amadeus API response with metadata.
+
+    Args:
+        response_body: Raw response body from Amadeus API
+
+    Returns:
+        Formatted response dict with provider and timestamp
+    """
+    result = response_body.copy() if isinstance(response_body, dict) else response_body
+    result["provider"] = "Amadeus GDS"
+    result["search_timestamp"] = datetime.now().isoformat()
+    return result
+
+
+def format_error_response(error_msg: str) -> Dict[str, str]:
+    """Format error response consistently across all tools.
+
+    Args:
+        error_msg: Error message string
+
+    Returns:
+        Standardized error dict
+    """
+    return {"error": error_msg}
 
 
 def get_nws_headers() -> Dict[str, str]:

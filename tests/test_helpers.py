@@ -48,14 +48,14 @@ class TestGeolocator:
         assert callable(geocode_limiter)
         assert callable(reverse_limiter)
 
-    def test_get_geolocator_returns_different_instances(self):
-        """Test that multiple calls to get_geolocator return different instances."""
+    def test_get_geolocator_returns_cached_instances(self):
+        """Test that multiple calls to get_geolocator return the same cached instances."""
         limiter1_geo, limiter1_rev = get_geolocator()
         limiter2_geo, limiter2_rev = get_geolocator()
 
-        # Should be different instances each time
-        assert limiter1_geo is not limiter2_geo
-        assert limiter1_rev is not limiter2_rev
+        # Should be the same cached instances for performance
+        assert limiter1_geo is limiter2_geo
+        assert limiter1_rev is limiter2_rev
 
     def test_get_geolocator_rate_limiter_has_delay(self):
         """Test that rate limiters are properly configured with delay."""

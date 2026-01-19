@@ -1,19 +1,29 @@
 import os
 import json
-import uuid
 import requests
 from typing import List, Dict, Optional, Any
-from datetime import datetime, timedelta
+from datetime import datetime
 from dataclasses import dataclass
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
-from geopy.geocoders import Nominatim
-from geopy.extra.rate_limiter import RateLimiter
+from dotenv import load_dotenv
 from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
 
 from amadeus import Client, ResponseError
 from fastmcp import FastMCP, Context
+
+from travel_assistant.helpers import (
+    get_serpapi_key,
+    get_exchange_rate_api_key,
+    get_geolocator,
+    get_nws_headers,
+    make_nws_request,
+    format_amadeus_response,
+    format_error_response,
+)
+
+load_dotenv()
 
 # =====================================================================
 # APPLICATION CONTEXT AND LIFECYCLE
@@ -44,47 +54,6 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
 
 # Initialize FastMCP server with lifespan
 mcp = FastMCP("Travel Concierge", lifespan=app_lifespan)
-
-# =====================================================================
-# UTILITY FUNCTIONS
-# =====================================================================
-
-def get_serpapi_key() -> str:
-    """Get SerpAPI key from environment variable."""
-    api_key = os.getenv("SERPAPI_KEY")
-    if not api_key:
-        raise ValueError("SERPAPI_KEY environment variable is required")
-    return api_key
-
-def get_exchange_rate_api_key() -> str:
-    """Get ExchangeRate-API key from environment variable."""
-    api_key = os.getenv("EXCHANGE_RATE_API_KEY")
-    if not api_key:
-        raise ValueError("EXCHANGE_RATE_API_KEY environment variable is required")
-    return api_key
-
-def get_geolocator():
-    """Initialize and return a geolocator with rate limiting."""
-    email_identifier = f"{uuid.uuid4()}.com"
-    geolocator = Nominatim(user_agent=email_identifier)
-    return RateLimiter(geolocator.geocode, min_delay_seconds=1), RateLimiter(geolocator.reverse, min_delay_seconds=1)
-
-def get_nws_headers() -> Dict[str, str]:
-    """Get headers for NWS API requests with required User-Agent."""
-    return {
-        "User-Agent": "CombinedTravelMCP/1.0 (combined-travel-mcp, support@example.com)",
-        "Accept": "application/geo+json"
-    }
-
-def make_nws_request(endpoint: str) -> Optional[Dict[str, Any]]:
-    """Make a request to the NWS API with proper error handling."""
-    try:
-        response = requests.get(endpoint, headers=get_nws_headers(), timeout=10)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        print(f"Error making request to {endpoint}: {str(e)}")
-        return None
 
 # =====================================================================
 # COMBINED FLIGHT SEARCH TOOLS
@@ -236,13 +205,13 @@ def search_flights_amadeus(
         max: Maximum number of flight offers to return
     """
     if adults and not (1 <= adults <= 9):
-        return json.dumps({"error": "Adults must be between 1 and 9"})
+        return format_error_response("Adults must be between 1 and 9")
 
     if children and infants and adults and (adults + children > 9):
-        return json.dumps({"error": "Total number of seated travelers (adults + children) cannot exceed 9"})
+        return format_error_response("Total number of seated travelers (adults + children) cannot exceed 9")
 
     if infants and adults and (infants > adults):
-        return json.dumps({"error": "Number of infants cannot exceed number of adults"})
+        return format_error_response("Number of infants cannot exceed number of adults")
 
     amadeus_client = ctx.request_context.lifespan_context.amadeus_client
     params = {}
@@ -277,18 +246,15 @@ def search_flights_amadeus(
         ctx.info(f"API parameters: {json.dumps(params)}")
 
         response = amadeus_client.shopping.flight_offers_search.get(**params)
-        result = response.body
-        result["provider"] = "Amadeus GDS"
-        result["search_timestamp"] = datetime.now().isoformat()
-        return json.dumps(result)
+        return format_amadeus_response(response.body)
     except ResponseError as error:
         error_msg = f"Amadeus API error: {str(error)}"
         ctx.info(f"Error: {error_msg}")
-        return json.dumps({"error": error_msg})
+        return format_error_response(error_msg)
     except Exception as e:
         error_msg = f"Unexpected error: {str(e)}"
         ctx.info(f"Error: {error_msg}")
-        return json.dumps({"error": error_msg})
+        return format_error_response(error_msg)
 
 # =====================================================================
 # COMBINED HOTEL SEARCH TOOLS
@@ -465,20 +431,17 @@ def search_hotels_amadeus_by_city(
     try:
         ctx.info(f"Searching Amadeus hotels in city: {cityCode}")
         ctx.info(f"API parameters: {json.dumps(params)}")
-        
+
         response = amadeus_client.reference_data.locations.hotels.by_city.get(**params)
-        result = response.body
-        result["provider"] = "Amadeus GDS"
-        result["search_timestamp"] = datetime.now().isoformat()
-        return json.dumps(result)
+        return format_amadeus_response(response.body)
     except ResponseError as error:
         error_msg = f"Amadeus API error: {str(error)}"
         ctx.info(f"Error: {error_msg}")
-        return json.dumps({"error": error_msg})
+        return format_error_response(error_msg)
     except Exception as e:
         error_msg = f"Unexpected error: {str(e)}"
         ctx.info(f"Error: {error_msg}")
-        return json.dumps({"error": error_msg})
+        return format_error_response(error_msg)
 
 @mcp.tool()
 def search_hotels_amadeus_geocode(
@@ -526,18 +489,15 @@ def search_hotels_amadeus_geocode(
         ctx.info(f"API parameters: {json.dumps(params)}")
         
         response = amadeus_client.reference_data.locations.hotels.by_geocode.get(**params)
-        result = response.body
-        result["provider"] = "Amadeus GDS"
-        result["search_timestamp"] = datetime.now().isoformat()
-        return json.dumps(result)
+        return format_amadeus_response(response.body)
     except ResponseError as error:
         error_msg = f"Amadeus API error: {str(error)}"
         ctx.info(f"Error: {error_msg}")
-        return json.dumps({"error": error_msg})
+        return format_error_response(error_msg)
     except Exception as e:
         error_msg = f"Unexpected error: {str(e)}"
         ctx.info(f"Error: {error_msg}")
-        return json.dumps({"error": error_msg})
+        return format_error_response(error_msg)
 
 @mcp.tool()
 def search_hotel_offers_amadeus(
@@ -579,11 +539,11 @@ def search_hotel_offers_amadeus(
         lang: Language code for descriptions (e.g., EN, FR)
     """
     if not cityCode and not hotelIds:
-        return json.dumps({"error": "Either cityCode or hotelIds must be provided"})
-    
+        return format_error_response("Either cityCode or hotelIds must be provided")
+
     amadeus_client = ctx.request_context.lifespan_context.amadeus_client
     params = {"adults": adults}
-    
+
     if cityCode:
         params["cityCode"] = cityCode
     if hotelIds:
@@ -612,25 +572,22 @@ def search_hotel_offers_amadeus(
         params["sort"] = sort
     if lang:
         params["lang"] = lang
-    
+
     try:
         search_location = cityCode if cityCode else f"hotels {hotelIds}"
         ctx.info(f"Searching Amadeus hotel offers for: {search_location}")
         ctx.info(f"API parameters: {json.dumps(params)}")
-        
+
         response = amadeus_client.shopping.hotel_offers.get(**params)
-        result = response.body
-        result["provider"] = "Amadeus GDS"
-        result["search_timestamp"] = datetime.now().isoformat()
-        return json.dumps(result)
+        return format_amadeus_response(response.body)
     except ResponseError as error:
         error_msg = f"Amadeus API error: {str(error)}"
         ctx.info(f"Error: {error_msg}")
-        return json.dumps({"error": error_msg})
+        return format_error_response(error_msg)
     except Exception as e:
         error_msg = f"Unexpected error: {str(e)}"
         ctx.info(f"Error: {error_msg}")
-        return json.dumps({"error": error_msg})
+        return format_error_response(error_msg)
 
 # =====================================================================
 # COMBINED ACTIVITY & EVENT SEARCH TOOLS
@@ -751,25 +708,22 @@ def search_activities_amadeus(
     try:
         ctx.info(f"Searching Amadeus tours and activities at coordinates: {latitude}, {longitude}")
         ctx.info(f"API parameters: {json.dumps(params)}")
-        
+
         # Note: This endpoint might be available in newer versions of the Amadeus SDK
         response = amadeus_client.shopping.activities.get(**params)
-        result = response.body
-        result["provider"] = "Amadeus GDS"
-        result["search_timestamp"] = datetime.now().isoformat()
-        return json.dumps(result)
+        return format_amadeus_response(response.body)
     except ResponseError as error:
         error_msg = f"Amadeus API error: {str(error)}"
         ctx.info(f"Error: {error_msg}")
-        return json.dumps({"error": error_msg})
+        return format_error_response(error_msg)
     except AttributeError as e:
         error_msg = f"Tours and Activities API not available in current SDK version: {str(e)}"
         ctx.info(f"Error: {error_msg}")
-        return json.dumps({"error": error_msg, "note": "This API might require a newer SDK version or special access"})
+        return format_error_response(error_msg + " (This API might require a newer SDK version or special access)")
     except Exception as e:
         error_msg = f"Unexpected error: {str(e)}"
         ctx.info(f"Error: {error_msg}")
-        return json.dumps({"error": error_msg})
+        return format_error_response(error_msg)
 
 @mcp.tool()
 def get_activity_details_amadeus(
@@ -789,24 +743,21 @@ def get_activity_details_amadeus(
     
     try:
         ctx.info(f"Getting Amadeus activity details for: {activityId}")
-        
+
         response = amadeus_client.shopping.activity(activityId).get()
-        result = response.body
-        result["provider"] = "Amadeus GDS"
-        result["search_timestamp"] = datetime.now().isoformat()
-        return json.dumps(result)
+        return format_amadeus_response(response.body)
     except ResponseError as error:
         error_msg = f"Amadeus API error: {str(error)}"
         ctx.info(f"Error: {error_msg}")
-        return json.dumps({"error": error_msg})
+        return format_error_response(error_msg)
     except AttributeError as e:
         error_msg = f"Tours and Activities API not available in current SDK version: {str(e)}"
         ctx.info(f"Error: {error_msg}")
-        return json.dumps({"error": error_msg, "note": "This API might require a newer SDK version or special access"})
+        return format_error_response(error_msg + " (This API might require a newer SDK version or special access)")
     except Exception as e:
         error_msg = f"Unexpected error: {str(e)}"
         ctx.info(f"Error: {error_msg}")
-        return json.dumps({"error": error_msg})
+        return format_error_response(error_msg)
 
 # =====================================================================
 # GEOCODING TOOLS
