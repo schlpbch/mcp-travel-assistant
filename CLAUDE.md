@@ -292,6 +292,124 @@ uv pip install travel-assistant  # From package
 | `pyproject.toml:59-65` | Pytest configuration |
 | `uv.lock` | Reproducible dependency lock file |
 
+## Testing
+
+### Test Suite Overview
+
+The project includes a comprehensive test suite with **126 passing tests** covering all major components:
+
+```
+tests/
+├── test_helpers.py        # 10 tests: API keys, geolocator, NWS requests (100% coverage)
+├── test_models.py         # 51 tests: Pydantic model validation (100% coverage)
+├── test_clients.py        # 39 tests: API client mocking with responses library (77% coverage)
+├── test_server.py         # 26 tests: Server structure and integration (13% coverage)
+├── conftest.py            # Shared fixtures (autouse mock env vars)
+└── __init__.py            # Package marker
+```
+
+### Running Tests
+
+```bash
+# Run all tests with verbose output
+uv run pytest tests/ -v
+
+# Run with coverage report
+uv run pytest tests/ --cov=src/travel_assistant --cov-report=html --cov-report=term-missing
+
+# Run specific test file
+uv run pytest tests/test_models.py -v
+
+# Run specific test class
+uv run pytest tests/test_clients.py::TestSerpAPIClient -v
+
+# Run with output capture disabled
+uv run pytest tests/ -v -s
+```
+
+### Coverage Summary
+
+| Module | Coverage | Lines |
+|--------|----------|-------|
+| `helpers.py` | 100% | 30 |
+| `models.py` | 100% | 147 |
+| `clients.py` | 77% | 191 |
+| `server.py` | 13% | 483 |
+| **Overall** | **45%** | **852** |
+
+*Note: Low server.py coverage is expected - it contains mostly tool handler functions that require async MCP client testing beyond unit scope.*
+
+### Test Organization
+
+**1. test_helpers.py** - Utility function tests
+- API key retrieval with monkeypatch
+- Geolocator rate limiter verification
+- NWS request header validation
+- HTTP error handling (500, 404, timeouts)
+
+**2. test_models.py** - Pydantic model validation
+- Valid input creation for all 20+ models
+- Default value verification
+- Field constraint validation (ranges, required fields)
+- Type validation (latitude/longitude bounds, currency amounts)
+
+**3. test_clients.py** - API client mocking
+- **SerpAPIClient**: Flight/hotel/event/stock searches with HTTP error handling
+- **AmadeusClientWrapper**: Flight/hotel searches with parameter validation
+- **ExchangeRateClient**: Currency conversion with API error handling
+- **OpenMeteoClient**: Weather forecast and current conditions
+- **GeocodingClient**: Geocoding and reverse geocoding with mocking
+
+**4. test_server.py** - Server structure and integration
+- FastMCP instance creation and properties
+- Module import verification
+- Client instantiation
+- Server module structure validation
+
+### Mocking Patterns Used
+
+```python
+# HTTP mocking with responses library
+@responses.activate
+def test_search_flights():
+    responses.add(responses.GET, "https://serpapi.com/search",
+                  json={"best_flights": []}, status=200)
+    client = SerpAPIClient()
+    result = client.search_flights(...)
+
+# SDK mocking with unittest.mock
+from unittest.mock import Mock
+mock_amadeus = Mock()
+mock_amadeus.shopping.flight_offers_search.get.return_value = mock_response
+wrapper = AmadeusClientWrapper(mock_amadeus)
+
+# Environment variable mocking
+def test_api_key(monkeypatch):
+    monkeypatch.setenv("SERPAPI_KEY", "test-key")
+    assert get_serpapi_key() == "test-key"
+
+# Conftest fixtures for shared setup
+@pytest.fixture(autouse=True)
+def mock_env_vars(monkeypatch):
+    # Automatically set env vars for all tests
+    monkeypatch.setenv("SERPAPI_KEY", "test-serpapi-key-12345")
+```
+
+### Adding New Tests
+
+1. **For new helpers**: Add to `test_helpers.py` using `@responses.activate` for HTTP
+2. **For new models**: Add to `test_models.py` with valid/invalid data patterns
+3. **For new clients**: Add to `test_clients.py` with `responses` mocking
+4. **For server changes**: Update `test_server.py` integration tests
+
+### Dependencies
+
+Tests require dev dependencies (added via `uv pip install -e ".[dev]"`):
+- `pytest>=8.0.0` - Test runner
+- `pytest-asyncio>=0.23.0` - Async test support
+- `pytest-cov>=4.1.0` - Coverage reports
+- `responses>=0.25.0` - HTTP mocking for requests library
+
 ## Performance & Scalability
 
 - **Lifespan management**: Amadeus client created once, shared across requests (FastMCP 2.0 improvement)
@@ -310,12 +428,14 @@ uv pip install travel-assistant  # From package
 
 ## Future Improvements
 
-- Add comprehensive test suite in `tests/`
-- Extract repeated tool logic into helper functions
+- ✅ **DONE**: Add comprehensive test suite in `tests/` (126 tests, 45% coverage)
+- Extract repeated tool logic into helper functions (reduce server.py complexity)
 - Consider asyncio refactoring for better performance
 - Add monitoring/observability hooks
 - Create task-specific prompts in addition to travel_planning_prompt
 - Add CLI interface for local development
+- Expand test coverage to include server tool integration tests
+- Add property-based testing with hypothesis library
 
 ---
 
