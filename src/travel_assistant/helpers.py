@@ -74,6 +74,40 @@ def format_error_response(error_msg: str) -> Dict[str, str]:
     return {"error": error_msg}
 
 
+def build_optional_params(
+    required_params: Dict[str, Any],
+    optional_params: Dict[str, Any],
+    none_check_fields: Optional[set] = None
+) -> Dict[str, Any]:
+    """Build API parameter dict with optional parameter handling.
+
+    Handles two types of optional parameters:
+    - Truthy check: Empty strings/None values excluded (default)
+    - None check: Only None excluded, 0/False values included (for numeric/bool)
+
+    Args:
+        required_params: Dict of required parameters (always included)
+        optional_params: Dict of all optional parameters with their values
+        none_check_fields: Set of field names requiring 'is not None' check
+                          (for numeric/bool types where 0/False are valid)
+
+    Returns:
+        Complete parameter dict ready for API calls
+    """
+    params = required_params.copy()
+    none_check_set = none_check_fields or set()
+
+    for key, value in optional_params.items():
+        if key in none_check_set:
+            if value is not None:
+                params[key] = value
+        else:
+            if value:  # Truthy check for strings/None filtering
+                params[key] = value
+
+    return params
+
+
 def get_nws_headers() -> Dict[str, str]:
     """Get headers for NWS API requests with required User-Agent."""
     return {

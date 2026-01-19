@@ -13,6 +13,7 @@ from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
 from amadeus import Client, ResponseError
 from fastmcp import FastMCP, Context
 
+from travel_assistant.clients import SerpAPIClient
 from travel_assistant.helpers import (
     get_serpapi_key,
     get_exchange_rate_api_key,
@@ -21,6 +22,7 @@ from travel_assistant.helpers import (
     make_nws_request,
     format_amadeus_response,
     format_error_response,
+    build_optional_params,
 )
 
 load_dotenv()
@@ -54,6 +56,9 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
 
 # Initialize FastMCP server with lifespan
 mcp = FastMCP("Travel Concierge", lifespan=app_lifespan)
+
+# Initialize API clients (created once per server instance)
+serpapi_client = SerpAPIClient()
 
 # =====================================================================
 # COMBINED FLIGHT SEARCH TOOLS
@@ -102,11 +107,8 @@ def search_flights_serpapi(
     """
     
     try:
-        api_key = get_serpapi_key()
-        
-        # Build search parameters
+        # Build search parameters (client adds engine and api_key)
         params = {
-            "engine": "google_flights",
             "departure_id": departure_id,
             "arrival_id": arrival_id,
             "outbound_date": outbound_date,
@@ -119,17 +121,13 @@ def search_flights_serpapi(
             "currency": currency,
             "hl": language,
             "gl": country,
-            "api_key": api_key
         }
-        
+
         if return_date and trip_type == 1:  # Round trip
             params["return_date"] = return_date
-        
-        # Make API request
-        response = requests.get("https://serpapi.com/search", params=params)
-        response.raise_for_status()
-        
-        flight_data = response.json()
+
+        # Make API request (client handles engine, api_key, timeout)
+        flight_data = serpapi_client.search_flights(**params)
         
         # Process flight results
         processed_results = {
@@ -158,12 +156,10 @@ def search_flights_serpapi(
         
         return processed_results
         
-    except requests.exceptions.RequestException as e:
-        return {"error": f"Google Flights API request failed: {str(e)}"}
     except ValueError as e:
-        return {"error": str(e)}
+        return format_error_response(str(e))
     except Exception as e:
-        return {"error": f"Unexpected error: {str(e)}"}
+        return format_error_response(f"Google Flights API error: {str(e)}")
 
 @mcp.tool()
 def search_flights_amadeus(
@@ -214,32 +210,27 @@ def search_flights_amadeus(
         return format_error_response("Number of infants cannot exceed number of adults")
 
     amadeus_client = ctx.request_context.lifespan_context.amadeus_client
-    params = {}
-    params["originLocationCode"] = originLocationCode
-    params["destinationLocationCode"] = destinationLocationCode
-    params["departureDate"] = departureDate
-    params["adults"] = adults
-
-    if returnDate:
-        params["returnDate"] = returnDate
-    if children is not None:
-        params["children"] = children
-    if infants is not None:
-        params["infants"] = infants
-    if travelClass:
-        params["travelClass"] = travelClass
-    if includedAirlineCodes:
-        params["includedAirlineCodes"] = includedAirlineCodes
-    if excludedAirlineCodes:
-        params["excludedAirlineCodes"] = excludedAirlineCodes
-    if nonStop is not None:
-        params["nonStop"] = nonStop
-    if currencyCode:
-        params["currencyCode"] = currencyCode
-    if maxPrice is not None:
-        params["maxPrice"] = maxPrice
-    if max is not None:
-        params["max"] = max
+    params = build_optional_params(
+        required_params={
+            "originLocationCode": originLocationCode,
+            "destinationLocationCode": destinationLocationCode,
+            "departureDate": departureDate,
+            "adults": adults,
+        },
+        optional_params={
+            "returnDate": returnDate,
+            "children": children,
+            "infants": infants,
+            "travelClass": travelClass,
+            "includedAirlineCodes": includedAirlineCodes,
+            "excludedAirlineCodes": excludedAirlineCodes,
+            "nonStop": nonStop,
+            "currencyCode": currencyCode,
+            "maxPrice": maxPrice,
+            "max": max,
+        },
+        none_check_fields={"children", "infants", "nonStop", "maxPrice", "max"},
+    )
 
     try:
         ctx.info(f"Searching Amadeus flights from {originLocationCode} to {destinationLocationCode}")
@@ -313,11 +304,8 @@ def search_hotels_serpapi(
     """
     
     try:
-        api_key = get_serpapi_key()
-        
-        # Build search parameters
+        # Build search parameters (client adds engine and api_key)
         params = {
-            "engine": "google_hotels",
             "q": location,
             "check_in_date": check_in_date,
             "check_out_date": check_out_date,
@@ -326,9 +314,8 @@ def search_hotels_serpapi(
             "currency": currency,
             "gl": country,
             "hl": language,
-            "api_key": api_key
         }
-        
+
         # Add optional parameters
         if children_ages:
             params["children_ages"] = ",".join(map(str, children_ages))
@@ -350,12 +337,9 @@ def search_hotels_serpapi(
             params["vacation_rentals"] = "true"
         if bedrooms:
             params["bedrooms"] = bedrooms
-            
-        # Make API request
-        response = requests.get("https://serpapi.com/search", params=params)
-        response.raise_for_status()
-        
-        hotel_data = response.json()
+
+        # Make API request (client handles engine, api_key, timeout)
+        hotel_data = serpapi_client.search_hotels(**params)
         
         # Process hotel results
         processed_results = {
@@ -379,13 +363,11 @@ def search_hotels_serpapi(
         }
         
         return processed_results
-        
-    except requests.exceptions.RequestException as e:
-        return {"error": f"Google Hotels API request failed: {str(e)}"}
+
     except ValueError as e:
-        return {"error": str(e)}
+        return format_error_response(str(e))
     except Exception as e:
-        return {"error": f"Unexpected error: {str(e)}"}
+        return format_error_response(f"Google Hotels API error: {str(e)}")
 
 @mcp.tool()
 def search_hotels_amadeus_by_city(
@@ -413,21 +395,19 @@ def search_hotels_amadeus_by_city(
         hotelSource: Source of hotel content (ALL, BEDBANK, etc.)
     """
     amadeus_client = ctx.request_context.lifespan_context.amadeus_client
-    params = {"cityCode": cityCode}
-    
-    if radius is not None:
-        params["radius"] = radius
-    if radiusUnit:
-        params["radiusUnit"] = radiusUnit
-    if chainCodes:
-        params["chainCodes"] = chainCodes
-    if amenities:
-        params["amenities"] = amenities
-    if ratings:
-        params["ratings"] = ratings
-    if hotelSource:
-        params["hotelSource"] = hotelSource
-    
+    params = build_optional_params(
+        required_params={"cityCode": cityCode},
+        optional_params={
+            "radius": radius,
+            "radiusUnit": radiusUnit,
+            "chainCodes": chainCodes,
+            "amenities": amenities,
+            "ratings": ratings,
+            "hotelSource": hotelSource,
+        },
+        none_check_fields={"radius"},
+    )
+
     try:
         ctx.info(f"Searching Amadeus hotels in city: {cityCode}")
         ctx.info(f"API parameters: {json.dumps(params)}")
@@ -469,21 +449,19 @@ def search_hotels_amadeus_geocode(
         hotelSource: Source of hotel content (ALL, BEDBANK, etc.)
     """
     amadeus_client = ctx.request_context.lifespan_context.amadeus_client
-    params = {"latitude": latitude, "longitude": longitude}
-    
-    if radius is not None:
-        params["radius"] = radius
-    if radiusUnit:
-        params["radiusUnit"] = radiusUnit
-    if chainCodes:
-        params["chainCodes"] = chainCodes
-    if amenities:
-        params["amenities"] = amenities
-    if ratings:
-        params["ratings"] = ratings
-    if hotelSource:
-        params["hotelSource"] = hotelSource
-    
+    params = build_optional_params(
+        required_params={"latitude": latitude, "longitude": longitude},
+        optional_params={
+            "radius": radius,
+            "radiusUnit": radiusUnit,
+            "chainCodes": chainCodes,
+            "amenities": amenities,
+            "ratings": ratings,
+            "hotelSource": hotelSource,
+        },
+        none_check_fields={"radius"},
+    )
+
     try:
         ctx.info(f"Searching Amadeus hotels at coordinates: {latitude}, {longitude}")
         ctx.info(f"API parameters: {json.dumps(params)}")
@@ -542,36 +520,26 @@ def search_hotel_offers_amadeus(
         return format_error_response("Either cityCode or hotelIds must be provided")
 
     amadeus_client = ctx.request_context.lifespan_context.amadeus_client
-    params = {"adults": adults}
-
-    if cityCode:
-        params["cityCode"] = cityCode
-    if hotelIds:
-        params["hotelIds"] = hotelIds
-    if checkInDate:
-        params["checkInDate"] = checkInDate
-    if checkOutDate:
-        params["checkOutDate"] = checkOutDate
-    if roomQuantity is not None:
-        params["roomQuantity"] = roomQuantity
-    if priceRange:
-        params["priceRange"] = priceRange
-    if currency:
-        params["currency"] = currency
-    if paymentPolicy:
-        params["paymentPolicy"] = paymentPolicy
-    if boardType:
-        params["boardType"] = boardType
-    if includeClosed is not None:
-        params["includeClosed"] = includeClosed
-    if bestRateOnly is not None:
-        params["bestRateOnly"] = bestRateOnly
-    if view:
-        params["view"] = view
-    if sort:
-        params["sort"] = sort
-    if lang:
-        params["lang"] = lang
+    params = build_optional_params(
+        required_params={"adults": adults},
+        optional_params={
+            "cityCode": cityCode,
+            "hotelIds": hotelIds,
+            "checkInDate": checkInDate,
+            "checkOutDate": checkOutDate,
+            "roomQuantity": roomQuantity,
+            "priceRange": priceRange,
+            "currency": currency,
+            "paymentPolicy": paymentPolicy,
+            "boardType": boardType,
+            "includeClosed": includeClosed,
+            "bestRateOnly": bestRateOnly,
+            "view": view,
+            "sort": sort,
+            "lang": lang,
+        },
+        none_check_fields={"roomQuantity", "includeClosed", "bestRateOnly"},
+    )
 
     try:
         search_location = cityCode if cityCode else f"hotels {hotelIds}"
@@ -622,33 +590,26 @@ def search_events_serpapi(
     """
     
     try:
-        api_key = get_serpapi_key()
-        
         # Build search query
         search_query = query
         if location:
             search_query += f" in {location}"
-        
-        # Build search parameters
+
+        # Build search parameters (client adds engine and api_key)
         params = {
-            "engine": "google_events",
             "q": search_query,
             "hl": language,
             "gl": country,
-            "api_key": api_key
         }
-        
+
         # Add optional filters
         if date_filter:
             params["htichips"] = f"date:{date_filter}"
         if event_type:
             params["htichips"] = f"event_type:{event_type}"
-        
-        # Make API request
-        response = requests.get("https://serpapi.com/search", params=params)
-        response.raise_for_status()
-        
-        event_data = response.json()
+
+        # Make API request (client handles engine, api_key, timeout)
+        event_data = serpapi_client.search_events(**params)
         
         # Process event results
         processed_results = {
@@ -667,13 +628,11 @@ def search_events_serpapi(
         }
         
         return processed_results
-        
-    except requests.exceptions.RequestException as e:
-        return {"error": f"Google Events API request failed: {str(e)}"}
+
     except ValueError as e:
-        return {"error": str(e)}
+        return format_error_response(str(e))
     except Exception as e:
-        return {"error": f"Unexpected error: {str(e)}"}
+        return format_error_response(f"Google Events API error: {str(e)}")
 
 @mcp.tool()
 def search_activities_amadeus(
@@ -1121,32 +1080,26 @@ def lookup_stock(
     """
     
     try:
-        api_key = get_serpapi_key()
-        
         # Format query
         query = symbol.upper()
         if exchange:
             query = f"{symbol.upper()}:{exchange.upper()}"
-        
-        # Build search parameters
+
+        # Build search parameters (client adds engine and api_key)
         params = {
-            "engine": "google_finance",
             "q": query,
             "hl": language,
-            "api_key": api_key
         }
-        
+
         if window:
             params["window"] = window
-        
-        # Make API request
-        response = requests.get("https://serpapi.com/search", params=params)
-        response.raise_for_status()
-        
-        finance_data = response.json()
-        
+
+        # Make API request (client handles engine, api_key, timeout)
+        finance_data = serpapi_client.lookup_stock(**params)
+
         # Process results
         processed_results = {
+            "provider": "Google Finance (SerpAPI)",
             "search_metadata": {
                 "symbol": symbol.upper(),
                 "exchange": exchange,
@@ -1159,15 +1112,13 @@ def lookup_stock(
             "historical_data": finance_data.get("historical_data", []),
             "news": finance_data.get("news", [])
         }
-        
+
         return processed_results
-        
-    except requests.exceptions.RequestException as e:
-        return {"error": f"API request failed: {str(e)}"}
+
     except ValueError as e:
-        return {"error": str(e)}
+        return format_error_response(str(e))
     except Exception as e:
-        return {"error": f"Unexpected error: {str(e)}"}
+        return format_error_response(f"Google Finance API error: {str(e)}")
 
 # =====================================================================
 # UNIFIED PROMPTS
