@@ -2,8 +2,10 @@
 
 from dataclasses import dataclass
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from amadeus import Client
+
+from travel_assistant.helpers import validate_date_format, validate_currency_code
 
 
 # =====================================================================
@@ -36,6 +38,18 @@ class FlightSearchParams(BaseModel):
     country: str = Field("us", description="Country code for localized results (e.g., 'us', 'gb')")
     language: str = Field("en", description="Language code (e.g., 'en', 'fr')")
     max_results: int = Field(10, ge=1, le=50, description="Maximum number of results to return")
+
+    @field_validator('outbound_date', 'return_date')
+    @classmethod
+    def validate_dates(cls, v):
+        if v:
+            return validate_date_format(v)
+        return v
+
+    @field_validator('currency')
+    @classmethod
+    def validate_currency(cls, v):
+        return validate_currency_code(v)
 
 
 class AmadeusFlightSearchParams(BaseModel):

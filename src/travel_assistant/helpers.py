@@ -125,3 +125,44 @@ def make_nws_request(endpoint: str) -> Optional[Dict[str, Any]]:
     except requests.exceptions.RequestException as e:
         print(f"Error making request to {endpoint}: {str(e)}")
         return None
+
+
+# =====================================================================
+# VALIDATION HELPERS
+# =====================================================================
+
+def validate_date_format(date_str: str, field_name: str = "date") -> str:
+    """Validate date is in YYYY-MM-DD format.
+
+    Args:
+        date_str: Date string to validate
+        field_name: Name of the field (for error messages)
+
+    Returns:
+        Validated date string
+
+    Raises:
+        ValueError: If date format is invalid
+    """
+    try:
+        datetime.strptime(date_str, '%Y-%m-%d')
+        return date_str
+    except ValueError:
+        raise ValueError(f"{field_name} must be in YYYY-MM-DD format")
+
+
+def validate_currency_code(code: str) -> str:
+    """Validate currency code is 3 uppercase letters (ISO 4217).
+
+    Args:
+        code: Currency code to validate (e.g., 'USD', 'EUR')
+
+    Returns:
+        Uppercase currency code
+
+    Raises:
+        ValueError: If currency code format is invalid
+    """
+    if not code or len(code) != 3 or not code.isalpha():
+        raise ValueError("Currency code must be 3 letters (e.g., USD, EUR, GBP)")
+    return code.upper()
