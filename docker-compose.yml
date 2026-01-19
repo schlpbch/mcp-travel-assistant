@@ -1,21 +1,19 @@
 version: '3.8'
 
 services:
-  # Unified Travel Concierge Server
-  unified-travel-server:
+  # Travel Assistant MCP Server
+  travel-assistant:
     build:
       context: .
       dockerfile: Dockerfile
     environment:
       - SERPAPI_KEY=${SERPAPI_KEY}
+      - AMADEUS_API_KEY=${AMADEUS_API_KEY}
+      - AMADEUS_API_SECRET=${AMADEUS_API_SECRET}
+      - EXCHANGE_RATE_API_KEY=${EXCHANGE_RATE_API_KEY}
     ports:
       - "8000:8000"
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   # Optional: Keep individual servers for backward compatibility
   # Uncomment if you need to run individual services alongside the unified server

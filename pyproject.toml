@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
-name = "unified-travel-concierge"
-version = "1.0.0"
+name = "travel-assistant"
+version = "2.0.0"
 description = "Unified MCP server providing comprehensive travel planning services"
 authors = [
     {name = "Travel Concierge Team", email = "support@travelconcierge.com"}
@@ -23,10 +23,9 @@ classifiers = [
 dependencies = [
     "requests>=2.31.0",
     "geopy>=2.3.0",
-    "fastmcp>=0.1.0",
+    "fastmcp>=2.0.0,<3.0.0",
     "mcp>=1.0.0",
-    "uvicorn>=0.24.0",
-    "fastapi>=0.110.0",
+    "pydantic>=2.0.0",
     "python-dotenv>=1.0.1",
     "amadeus>=12.0.0",
 ]
@@ -45,9 +44,14 @@ Homepage = "https://github.com/yourusername/unified-travel-concierge"
 Repository = "https://github.com/yourusername/unified-travel-concierge.git"
 Issues = "https://github.com/yourusername/unified-travel-concierge/issues"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["unified_travel_server*"]
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["tests/*"]
 
 [tool.black]
 line-length = 100

@@ -13,7 +13,7 @@ from geopy.extra.rate_limiter import RateLimiter
 from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
 
 from amadeus import Client, ResponseError
-from mcp.server.fastmcp import FastMCP, Context
+from fastmcp import FastMCP, Context
 
 # =====================================================================
 # APPLICATION CONTEXT AND LIFECYCLE
@@ -43,7 +43,7 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
         pass
 
 # Initialize FastMCP server with lifespan
-mcp = FastMCP("Travel Concierge", dependencies=["amadeus", "requests", "geopy"], lifespan=app_lifespan)
+mcp = FastMCP("Travel Concierge", lifespan=app_lifespan)
 
 # =====================================================================
 # UTILITY FUNCTIONS
