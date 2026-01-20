@@ -59,10 +59,48 @@ This server is part of a **federated MCP ecosystem** for comprehensive Swiss tra
 
 | Server | Focus | Tools | Highlights |
 |--------|-------|-------|-----------|
-| **journey-service-mcp** | Swiss rail planning | 8 tools | Real-time SBB data, 126+ stations, CO2 tracking |
-| **swiss-mobility-mcp** | Rail ticketing | 8 tools | SBB pricing, booking, GA pass support, PDF tickets |
-| **swiss-tourism-mcp** | Attractions & packages | 21 tools | 283 sights, 133 RailAway combos, 10 Alpine resorts |
-| **open-meteo-mcp** | Weather intelligence | 11 tools | 16-day forecasts, snow conditions, pollen data, comfort index |
+| **journey-service-mcp** | Swiss rail planning | 8 tools | Real-time SBB, 126+ stations, ♿ wheelchair routing, 🌍 CO2 tracking |
+| **swiss-mobility-mcp** | Rail ticketing | 8 tools | SBB pricing, booking, GA pass, PDF tickets |
+| **swiss-tourism-mcp** | Attractions & packages | 21 tools | 283 sights, 133 RailAway combos, ♿ accessible attractions |
+| **open-meteo-mcp** | Weather intelligence | 11 tools | 16-day forecasts, snow, pollen, air quality, comfort index |
+
+### ♿ Accessibility-First Travel Planning
+
+Our ecosystem prioritizes **inclusive travel** for all abilities:
+
+**Journey Service MCP:**
+- Wheelchair-accessible route planning with 4 accessibility levels
+  - Self-boarding, crew assistance, notification-required, shuttle-transport
+- Train accessibility data: wheelchair spaces, accessible toilets, visual aids
+- Optimized transfer times for mobility-restricted travelers (10+ min minimum)
+- Real-time platform accessibility information
+
+**Swiss Tourism MCP:**
+- Barrier-free attraction filtering: wheelchair, mobility, pet-friendly, stroller-compatible
+- Comprehensive accessible tourism prompt covering:
+  - Wheelchair-accessible attractions and accommodations
+  - Level boarding and accessible transport connections
+  - Hotels with roll-in showers and accessible bathrooms
+  - Sensory, cognitive, dietary, and medical needs
+  - Accessible parking and resting areas
+
+### 🌍 Ecology-Conscious Travel Planning
+
+Our ecosystem promotes **sustainable, low-carbon travel**:
+
+**Journey Service MCP:**
+- CO2 emissions analysis comparing train vs car vs plane
+- Eco-friendly route recommendations with tree offset calculations
+- Train-based travel (lowest carbon footprint for ground transport)
+
+**Open-Meteo MCP:**
+- Air quality monitoring: CO, NO₂, SO₂, O₃ levels
+- Pollen data for health-conscious travel planning
+- Weather alerts for activity safety
+
+**Travel Concierge Server:**
+- Currency conversion for budget-conscious planning
+- Supports rail+attraction RailAway combo packages (efficient travel)
 
 ### Orchestration Example
 

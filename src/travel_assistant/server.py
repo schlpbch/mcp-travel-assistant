@@ -1040,8 +1040,19 @@ This server is part of a **federated MCP ecosystem** for comprehensive Swiss tra
 **Capabilities:**
 - Real-time SBB train connections with live delays and platform information
 - 126+ stations across Switzerland and neighboring countries
-- Accessibility routing for wheelchair users
-- Environmental impact analysis (CO2 comparison vs car/plane)
+
+**♿ Accessibility Features:**
+- Wheelchair-accessible route planning with 4 accessibility levels (self-boarding, crew assistance, notification-required, shuttle-transport)
+- Train accessibility data: wheelchair spaces, accessible toilets, visual impairment aids
+- Optimized transfer times for mobility-restricted travelers (10+ minute minimum)
+- Real-time platform accessibility information
+
+**🌍 Ecology Features:**
+- CO2 emissions analysis comparing train vs car vs plane
+- Eco-friendly route recommendations with tree offset calculations
+- Train-based travel routing (lowest carbon footprint for ground transport)
+
+**Additional Features:**
 - Train formation data (car layout, amenities, WiFi zones)
 
 **Key Tools:**
@@ -1075,6 +1086,19 @@ This server is part of a **federated MCP ecosystem** for comprehensive Swiss tra
 - 10 Alpine resorts with seasonal information
 - Multi-day trip planning
 
+**♿ Accessibility Features:**
+- Barrier-free attraction filtering: wheelchair, mobility, pet-friendly, stroller-compatible
+- Comprehensive accessible tourism planning with dedicated prompt covering:
+  - Wheelchair-accessible attractions and accommodations
+  - Level boarding and accessible transport connections
+  - Hotels with roll-in showers and accessible bathrooms
+  - Sensory, cognitive, dietary, and medical needs assessment
+  - Accessible parking and resting areas
+
+**🌍 Ecology Features:**
+- RailAway combo packages promote train+attraction efficiency (lowest carbon option)
+- Multi-day trip planning encourages longer stays (reduced travel frequency)
+
 **Key Tools:**
 - `tourism__search_sights` — Search attractions by category/vibe tags
 - `tourism__search_railaway_products` — Rail+attraction combos
@@ -1086,10 +1110,18 @@ This server is part of a **federated MCP ecosystem** for comprehensive Swiss tra
 **Capabilities:**
 - 16-day weather forecasts for Swiss locations
 - Snow depth and mountain conditions
-- Air quality monitoring with pollen data
-- Weather alerts (heat, cold, storm, UV)
 - Historical weather data (80+ years)
 - Comfort index for outdoor activities
+
+**♿ Accessibility Features:**
+- Weather alerts for safety-critical conditions: heat, cold, storm, UV intensity
+- Pollen data (Europe) for allergy-conscious travelers
+- Real-time air quality index (AQI) for respiratory health planning
+
+**🌍 Ecology Features:**
+- Air quality monitoring: CO, NO₂, SO₂, O₃ levels
+- Environmental condition tracking for low-emission activity planning
+- Weather-based activity optimization (reducing unnecessary travel)
 
 **Key Tools:**
 - `meteo__get_weather` — Detailed forecasts
@@ -1097,7 +1129,7 @@ This server is part of a **federated MCP ecosystem** for comprehensive Swiss tra
 - `meteo__get_air_quality` — AQI and pollen levels
 - `meteo__get_comfort_index` — Activity comfort score
 
-### Cross-Server Orchestration Example
+### Cross-Server Orchestration Examples
 
 **Complete Switzerland Trip Planning:**
 1. Use `meteo__get_weather()` to check conditions
@@ -1107,6 +1139,24 @@ This server is part of a **federated MCP ecosystem** for comprehensive Swiss tra
 5. Use `tourism__search_railaway_products()` for combo deals
 6. Use `search_hotels_serpapi()` (this server) for accommodation
 7. Use `meteo__get_comfort_index()` to optimize activities
+
+**♿ Accessible Trip Planning:**
+1. Use `journey__find_trips()` with wheelchair accessibility filters
+2. Use `tourism__search_sights()` with barrier-free attraction filters
+3. Use `meteo__get_weather_alerts()` for health/safety conditions
+4. Identify wheelchair spaces on trains via `getTrainFormation()`
+5. Use `tourism__plan_multi_day_trip()` with accessible accommodation
+6. Use `mobility__get_trip_pricing()` for appropriate seating/services
+7. Use `meteo__get_air_quality()` for respiratory health planning
+
+**🌍 Eco-Conscious Trip Planning:**
+1. Use `journey__find_trips()` for train-based routes (lowest CO2)
+2. Use `getEcoComparison()` to compare CO2 vs car/plane
+3. Use `tourism__search_railaway_products()` for efficient rail+attraction combos
+4. Use `tourism__plan_multi_day_trip()` to reduce travel frequency
+5. Use `meteo__get_air_quality()` to check environmental conditions
+6. Optimize routes with `calculate_distance()` (this server) for minimal travel
+7. Use `convert_currency()` (this server) for budget-friendly sustainable options
 
 ### Federation Setup
 
