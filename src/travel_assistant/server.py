@@ -791,7 +791,32 @@ I'm your comprehensive AI travel specialist with access to BOTH Google Travel Se
     prompt += """
 # YOUR COMPLETE DUAL-POWERED TRAVEL EXPERIENCE
 
-## Phase 0 — Rail & Ground Transport Planning
+## Phase 0 — Swiss Rail & Ground Transport Planning
+**For Switzerland destinations, leverage the specialized Swiss MCP ecosystem:**
+
+- **Journey Planning** — `journey-service-mcp` provides 8 SBB rail planning tools:
+  - `journey__find_trips` — Real-time train connections with live delays/platforms
+  - `findStopPlacesByName` — Station search across Switzerland
+  - `getPlaceEvents` — Live departure boards
+  - `compareRoutes` — Multi-criteria journey comparison
+  - `getEcoComparison` — CO2 emissions analysis
+
+- **Rail Ticketing** — `swiss-mobility-mcp` provides 8 booking tools:
+  - `mobility__get_trip_pricing` — Calculate SBB ticket prices
+  - `createBooking` — Book and confirm reservations
+  - `getTicketPdf` — Download PDF tickets
+
+- **Swiss Tourism** — `swiss-tourism-mcp` provides 21 tools for attractions:
+  - `tourism__search_sights` — 283 curated Swiss attractions
+  - `tourism__search_railaway_products` — 133 rail+attraction combos
+  - `tourism__plan_multi_day_trip` — Multi-day Swiss itineraries
+
+- **Swiss Weather** — `open-meteo-mcp` provides 11 weather tools:
+  - `meteo__get_weather` — Detailed forecasts for Swiss locations
+  - `meteo__get_snow_conditions` — Mountain snow reports
+  - `meteo__get_comfort_index` — Activity comfort scoring
+
+**Orchestration Pattern:** Use these MCPs for Switzerland trips, then fall back to global tools for international segments.
 
 ## Phase 1 — Flight Discovery & Comparison
 - **Google Flights Search** — use `search_flights_serpapi()` for consumer flight options.
@@ -850,7 +875,15 @@ Present everything as an expert travel friend with access to BOTH consumer and p
 - `get_current_conditions()` — Real-time weather
 - `convert_currency()` — Financial planning
 
-Let's create your perfect travel experience using BOTH consumer and professional travel platforms!
+**Swiss Rail & Tourism Ecosystem** (External MCPs - configure separately)
+- `journey__find_trips()` — SBB rail journey planning
+- `mobility__get_trip_pricing()` — Swiss rail ticket pricing
+- `tourism__search_sights()` — Swiss attractions search
+- `tourism__search_railaway_products()` — Rail+attraction combos
+- `meteo__get_weather()` — Swiss weather forecasts
+- `meteo__get_snow_conditions()` — Mountain conditions
+
+Let's create your perfect travel experience using BOTH consumer and professional travel platforms, enhanced with Swiss-specific services!
 """
 
     return prompt
@@ -997,6 +1030,115 @@ This combined server integrates the best of both consumer travel platforms (Goog
 - Fallback mechanisms between consumer and professional services
 - Comprehensive error reporting with platform identification
 - Timeout management and rate limiting compliance
+
+## 🇨🇭 Swiss Travel Ecosystem Integration
+
+This server is part of a **federated MCP ecosystem** for comprehensive Swiss travel planning. When planning Switzerland trips, leverage these specialized companion servers:
+
+### Journey Service MCP (Rail Planning)
+**Server:** `journey-service-mcp`
+**Capabilities:**
+- Real-time SBB train connections with live delays and platform information
+- 126+ stations across Switzerland and neighboring countries
+- Accessibility routing for wheelchair users
+- Environmental impact analysis (CO2 comparison vs car/plane)
+- Train formation data (car layout, amenities, WiFi zones)
+
+**Key Tools:**
+- `journey__find_trips` — Search train journeys with real-time data
+- `findStopPlacesByName` — Find stations by name
+- `getPlaceEvents` — Live departure boards
+- `compareRoutes` — Compare journey options by multiple criteria
+- `getEcoComparison` — CO2 emissions analysis
+
+### Swiss Mobility MCP (Rail Ticketing)
+**Server:** `swiss-mobility-mcp`
+**Capabilities:**
+- SBB ticket pricing with Half-Fare and GA pass support
+- Booking and reservation management
+- PDF ticket generation
+- Refund processing
+
+**Key Tools:**
+- `mobility__get_trip_pricing` — Calculate SBB fares
+- `createBooking` — Create reservations
+- `getTicketPdf` — Download PDF tickets
+- `cancelBooking` — Cancel reservations
+
+### Swiss Tourism MCP (Attractions & Packages)
+**Server:** `swiss-tourism-mcp`
+**Capabilities:**
+- 283 curated Swiss attractions with detailed information
+- 133 RailAway combo offers (rail + attraction bundles)
+- 19 Swiss Travel System products (passes, discount cards)
+- 12 holiday packages from Switzerland Travel Centre
+- 10 Alpine resorts with seasonal information
+- Multi-day trip planning
+
+**Key Tools:**
+- `tourism__search_sights` — Search attractions by category/vibe tags
+- `tourism__search_railaway_products` — Rail+attraction combos
+- `tourism__plan_multi_day_trip` — Generate Swiss itineraries
+- `tourism__search_resorts` — Alpine resort search
+
+### Open-Meteo MCP (Weather Intelligence)
+**Server:** `open-meteo-mcp`
+**Capabilities:**
+- 16-day weather forecasts for Swiss locations
+- Snow depth and mountain conditions
+- Air quality monitoring with pollen data
+- Weather alerts (heat, cold, storm, UV)
+- Historical weather data (80+ years)
+- Comfort index for outdoor activities
+
+**Key Tools:**
+- `meteo__get_weather` — Detailed forecasts
+- `meteo__get_snow_conditions` — Mountain snow reports
+- `meteo__get_air_quality` — AQI and pollen levels
+- `meteo__get_comfort_index` — Activity comfort score
+
+### Cross-Server Orchestration Example
+
+**Complete Switzerland Trip Planning:**
+1. Use `meteo__get_weather()` to check conditions
+2. Use `tourism__search_sights()` to find attractions
+3. Use `journey__find_trips()` to plan rail connections
+4. Use `mobility__get_trip_pricing()` to get ticket costs
+5. Use `tourism__search_railaway_products()` for combo deals
+6. Use `search_hotels_serpapi()` (this server) for accommodation
+7. Use `meteo__get_comfort_index()` to optimize activities
+
+### Federation Setup
+
+**Claude Desktop Configuration:**
+```json
+{
+  "mcpServers": {
+    "travel-concierge": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "travel_assistant.server"]
+    },
+    "journey-service": {
+      "command": "java",
+      "args": ["-jar", "path/to/journey-service-mcp.jar"]
+    },
+    "swiss-mobility": {
+      "command": "java",
+      "args": ["-jar", "path/to/swiss-mobility-mcp.jar"]
+    },
+    "swiss-tourism": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "swiss_tourism_mcp.server"]
+    },
+    "open-meteo": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "open_meteo_mcp.server"]
+    }
+  }
+}
+```
+
+Claude automatically orchestrates across all configured servers for Switzerland-focused trips.
 
 ## 🚀 Getting Started
 
