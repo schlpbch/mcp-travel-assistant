@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### CRITICAL: Fixed API Key Exposure Vulnerability
 - **Fixed** critical security vulnerability where ExchangeRate-API key was exposed in error messages
-- **Impact**: API key `4b9d09c342e6f730c7d2376e` could be leaked through error responses when currency conversion requests failed
+- **Impact**: API key could be leaked through error responses when currency conversion requests failed
 - **Risk Level**: CRITICAL - Could allow attackers to steal credentials, exhaust rate limits, and incur unauthorized costs
 - **Affected Components**:
   - `ExchangeRateClient.convert()` in `src/travel_assistant/clients.py`
