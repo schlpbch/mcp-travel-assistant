@@ -411,26 +411,6 @@ class TestCurrentWeather:
         assert weather.temperature_c is None
 
 
-class TestWeatherForecast:
-    """Test WeatherForecast Pydantic model."""
-
-    def test_valid_weather_forecast(self):
-        """Test creating a valid WeatherForecast."""
-        forecast = WeatherForecast(
-            coordinates={"latitude": 40.7128, "longitude": -74.0060},
-            provider="OpenMeteo",
-            forecast_type="daily",
-            forecast_periods=[
-                {"date": "2025-01-20", "temperature": 15},
-                {"date": "2025-01-21", "temperature": 16},
-            ],
-            forecast_metadata={"units": "celsius", "timezone": "UTC"},
-            search_timestamp="2025-01-20T10:30:00Z",
-        )
-        assert forecast.provider == "OpenMeteo"
-        assert len(forecast.forecast_periods) == 2
-
-
 class TestCurrencyParams:
     """Test CurrencyParams Pydantic model."""
 

@@ -56,7 +56,6 @@ API client wrapper classes:
 - **SerpAPIClient** - Google Flights, Hotels, Events, Finance via SerpAPI
 - **AmadeusClientWrapper** - Wraps Amadeus SDK with validation and error handling
 - **ExchangeRateClient** - Currency conversion via ExchangeRate-API
-- **OpenMeteoClient** - Weather forecasts and current conditions
 - **GeocodingClient** - Nominatim geocoding with rate limiting
 
 All clients encapsulate API logic and validation, returning dicts/JSON with consistent error handling.
@@ -366,7 +365,6 @@ uv run pytest tests/ -v -s
 - **SerpAPIClient**: Flight/hotel/event/stock searches with HTTP error handling
 - **AmadeusClientWrapper**: Flight/hotel searches with parameter validation
 - **ExchangeRateClient**: Currency conversion with API error handling
-- **OpenMeteoClient**: Weather forecast and current conditions
 - **GeocodingClient**: Geocoding and reverse geocoding with mocking
 
 **4. test_server.py** - Server structure and integration

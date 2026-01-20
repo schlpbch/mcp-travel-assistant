@@ -9,7 +9,6 @@ from travel_assistant.clients import (
     SerpAPIClient,
     AmadeusClientWrapper,
     ExchangeRateClient,
-    OpenMeteoClient,
     GeocodingClient,
 )
 
@@ -493,127 +492,6 @@ class TestExchangeRateClient:
         result = client.convert("USD", "EUR")
 
         assert "error" in result
-
-
-# =====================================================================
-# OPEN-METEO CLIENT TESTS
-# =====================================================================
-
-
-class TestOpenMeteoClient:
-    """Test OpenMeteoClient for weather data."""
-
-    def test_open_meteo_client_initialization(self):
-        """Test OpenMeteoClient initializes with correct base URL."""
-        client = OpenMeteoClient()
-        assert client.base_url == "https://api.open-meteo.com/v1/forecast"
-
-    @responses.activate
-    def test_get_forecast_daily(self):
-        """Test getting daily weather forecast."""
-        mock_response = {
-            "daily": {
-                "time": ["2025-01-20", "2025-01-21"],
-                "temperature_2m_max": [15, 16],
-                "temperature_2m_min": [10, 11],
-            },
-            "timezone": "UTC",
-        }
-
-        responses.add(
-            responses.GET,
-            "https://api.open-meteo.com/v1/forecast",
-            json=mock_response,
-            status=200,
-        )
-
-        client = OpenMeteoClient()
-        result = client.get_forecast(40.7128, -74.0060, hourly=False)
-
-        assert "coordinates" in result
-        assert result["forecast_type"] == "daily"
-        assert result["provider"] == "open-meteo"
-
-    @responses.activate
-    def test_get_forecast_hourly(self):
-        """Test getting hourly weather forecast."""
-        mock_response = {
-            "hourly": {
-                "time": ["2025-01-20T00:00", "2025-01-20T01:00"],
-                "temperature_2m": [15, 14],
-            },
-            "timezone": "UTC",
-        }
-
-        responses.add(
-            responses.GET,
-            "https://api.open-meteo.com/v1/forecast",
-            json=mock_response,
-            status=200,
-        )
-
-        client = OpenMeteoClient()
-        result = client.get_forecast(40.7128, -74.0060, hourly=True)
-
-        assert result["forecast_type"] == "hourly"
-
-    @responses.activate
-    def test_get_forecast_http_error(self):
-        """Test handling of HTTP error when getting forecast."""
-        responses.add(
-            responses.GET,
-            "https://api.open-meteo.com/v1/forecast",
-            status=500,
-        )
-
-        client = OpenMeteoClient()
-        result = client.get_forecast(40.7128, -74.0060)
-
-        assert "error" in result
-
-    @responses.activate
-    def test_get_current_conditions(self):
-        """Test getting current weather conditions."""
-        mock_response = {
-            "current_weather": {
-                "temperature": 15,
-                "windspeed": 10,
-                "winddirection": 270,
-                "is_day": 1,
-            },
-            "timezone": "UTC",
-        }
-
-        responses.add(
-            responses.GET,
-            "https://api.open-meteo.com/v1/forecast",
-            json=mock_response,
-            status=200,
-        )
-
-        client = OpenMeteoClient()
-        result = client.get_current_conditions(40.7128, -74.0060)
-
-        assert "current_conditions" in result
-        assert result["provider"] == "open-meteo"
-
-    @responses.activate
-    def test_get_current_conditions_not_available(self):
-        """Test handling when current conditions are not available."""
-        mock_response = {"timezone": "UTC"}  # Missing current_weather
-
-        responses.add(
-            responses.GET,
-            "https://api.open-meteo.com/v1/forecast",
-            json=mock_response,
-            status=200,
-        )
-
-        client = OpenMeteoClient()
-        result = client.get_current_conditions(40.7128, -74.0060)
-
-        assert "error" in result
-
 
 # =====================================================================
 # GEOCODING CLIENT TESTS
