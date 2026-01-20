@@ -51,6 +51,69 @@ Get the **best of both worlds**: consumer accessibility with professional depth!
 - **Weather Intelligence**: Real-time conditions and forecasts
 - **Currency Conversion**: Live exchange rates
 
+## 🇨🇭 Swiss Travel Ecosystem
+
+This server is part of a **federated MCP ecosystem** for comprehensive Swiss travel planning. For Switzerland trips, configure these companion MCP servers for specialized capabilities:
+
+### Companion Servers
+
+| Server | Focus | Tools | Highlights |
+|--------|-------|-------|-----------|
+| **journey-service-mcp** | Swiss rail planning | 8 tools | Real-time SBB data, 126+ stations, CO2 tracking |
+| **swiss-mobility-mcp** | Rail ticketing | 8 tools | SBB pricing, booking, GA pass support, PDF tickets |
+| **swiss-tourism-mcp** | Attractions & packages | 21 tools | 283 sights, 133 RailAway combos, 10 Alpine resorts |
+| **open-meteo-mcp** | Weather intelligence | 11 tools | 16-day forecasts, snow conditions, pollen data, comfort index |
+
+### Orchestration Example
+
+```
+User: "Plan a 3-day ski trip to Zermatt"
+
+Claude orchestrates across servers:
+1. meteo__get_snow_conditions() → Check resort snow/weather
+2. tourism__search_resorts() → Find ski resorts
+3. journey__find_trips() → Plan train Zurich → Zermatt
+4. mobility__get_trip_pricing() → Calculate rail ticket cost
+5. search_hotels_serpapi() → Find alpine lodging (this server)
+6. meteo__get_weather() → Get 3-day forecast
+7. convert_currency() → CHF pricing (this server)
+
+Result: Complete ski trip plan with rail, accommodation, weather, pricing
+```
+
+### Setup Federation
+
+Add all servers to your Claude Desktop config:
+
+```json
+{
+  "mcpServers": {
+    "travel-concierge": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "travel_assistant.server"]
+    },
+    "journey-service": {
+      "command": "java",
+      "args": ["-jar", "path/to/journey-service-mcp.jar"]
+    },
+    "swiss-mobility": {
+      "command": "java",
+      "args": ["-jar", "path/to/swiss-mobility-mcp.jar"]
+    },
+    "swiss-tourism": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "swiss_tourism_mcp.server"]
+    },
+    "open-meteo": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "open_meteo_mcp.server"]
+    }
+  }
+}
+```
+
+Claude automatically orchestrates across all servers for Swiss travel planning.
+
 ## 🛠️ Installation & Setup
 
 ### 1. Clone and Install Dependencies
