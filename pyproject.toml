@@ -13,7 +13,7 @@ dependencies = [
     "pydantic>=2.0.0",
     "python-dotenv>=1.0.1",
     "amadeus>=12.0.0",
-    "mcp-accessibility-models @ file:///home/schlpbch/code/mcp-accessibility-models",
+    "mcp-accessibility-models @ git+https://github.com/schlpbch/mcp-accessibility-models.git@v1.0.0",
     "swiss-ai-mcp-commons @ git+https://github.com/schlpbch/swiss-ai-mcp-commons.git@v1.0.0",
 ]
 
