@@ -1,6 +1,6 @@
 [project]
 name = "travel-assistant"
-version = "2.4.0"
+version = "3.0.0"
 description = "Unified MCP server providing comprehensive travel planning services"
 
 readme = "README.md"
@@ -14,6 +14,7 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "amadeus>=12.0.0",
     "mcp-accessibility-models @ file:///home/schlpbch/code/mcp-accessibility-models",
+    "swiss-ai-mcp-commons @ file:///home/schlpbch/code/swiss-ai-mcp-commons",
 ]
 
 [project.optional-dependencies]
