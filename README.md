@@ -324,6 +324,28 @@ cp env.example .env
 docker-compose up
 ```
 
+## 🧪 Testing
+
+The project includes a comprehensive test suite with **126 passing tests** and **52% code coverage**.
+
+```bash
+# Run all tests
+uv run pytest tests/ -v
+
+# Run with coverage report
+uv run pytest tests/ --cov=src/travel_assistant --cov-report=term-missing
+
+# Run specific test file
+uv run pytest tests/test_models.py -v
+```
+
+**Coverage Breakdown:**
+- `models.py`: 99% coverage
+- `clients.py`: 75% coverage
+- `helpers.py`: 73% coverage
+- `__init__.py`: 100% coverage
+- `server.py`: 16% coverage (tool implementations require async integration testing)
+
 ## 🐛 Troubleshooting
 
 ### Common Issues
@@ -345,11 +367,11 @@ docker-compose up
    Solution: Use a different port with `--port 8001`
 
 3. **Amadeus Authentication Error**
-4. 
+
    ```
    Error: Invalid API credentials
    ```
-   
+
    Solution: Verify your Amadeus API key and secret are correct
 
 ### Health Check

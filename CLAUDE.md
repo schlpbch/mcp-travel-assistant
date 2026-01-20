@@ -187,14 +187,22 @@ except Exception as e:
 
 ## Testing
 
-Test infrastructure is configured but no tests yet implemented. When adding tests:
+Comprehensive test suite with **126 passing tests** and **52% code coverage**.
+
+### Running Tests
 
 ```bash
-# Create tests/ directory with pytest files
-# Example: tests/test_clients.py, tests/test_models.py, tests/test_server.py
+# Run all tests with verbose output
+uv run pytest tests/ -v
 
-uv run pytest                           # Run all tests
-uv run pytest --cov=src/travel_assistant  # With coverage
+# Run with coverage report
+uv run pytest tests/ --cov=src/travel_assistant --cov-report=term-missing
+
+# Run specific test file
+uv run pytest tests/test_models.py -v
+
+# Run specific test class
+uv run pytest tests/test_clients.py::TestSerpAPIClient -v
 ```
 
 Configuration in `pyproject.toml`:
@@ -329,15 +337,16 @@ uv run pytest tests/ -v -s
 
 ### Coverage Summary
 
-| Module | Coverage | Lines |
-|--------|----------|-------|
-| `helpers.py` | 100% | 30 |
-| `models.py` | 100% | 147 |
-| `clients.py` | 77% | 191 |
-| `server.py` | 13% | 483 |
-| **Overall** | **45%** | **852** |
+| Module | Coverage | Statements | Missing |
+|--------|----------|-----------|---------|
+| `__init__.py` | 100% | 1 | 0 |
+| `models.py` | 99% | 158 | 1 |
+| `clients.py` | 75% | 201 | 50 |
+| `helpers.py` | 73% | 63 | 17 |
+| `server.py` | 16% | 375 | 315 |
+| **Overall** | **52%** | **798** | **383** |
 
-*Note: Low server.py coverage is expected - it contains mostly tool handler functions that require async MCP client testing beyond unit scope.*
+*Note: Low server.py coverage is expected - it contains mostly tool handler functions that require async MCP client testing beyond unit scope. The 1% gap in models.py is error handling edge case; 25% gap in clients.py is mostly API error scenarios.*
 
 ### Test Organization
 
@@ -428,15 +437,17 @@ Tests require dev dependencies (added via `uv pip install -e ".[dev]"`):
 
 ## Future Improvements
 
-- ✅ **DONE**: Add comprehensive test suite in `tests/` (126 tests, 45% coverage)
+- ✅ **DONE**: Add comprehensive test suite in `tests/` (126 passing tests, 52% coverage)
 - Extract repeated tool logic into helper functions (reduce server.py complexity)
 - Consider asyncio refactoring for better performance
 - Add monitoring/observability hooks
 - Create task-specific prompts in addition to travel_planning_prompt
 - Add CLI interface for local development
-- Expand test coverage to include server tool integration tests
+- Expand test coverage for server tool integration tests (AsyncIO testing)
 - Add property-based testing with hypothesis library
+- Improve clients.py coverage (currently 75%) - add more error scenario tests
+- Add server.py integration tests with mocked MCP context
 
 ---
 
-**Last Updated:** FastMCP 2.0 migration + modular refactoring (v2.0.0)
+**Last Updated:** Comprehensive test suite + documentation updates (v3.0.0)
