@@ -41,6 +41,9 @@ dev = [
     "flake8>=6.0.0",
 ]
 
+[project.scripts]
+travel-assistant = "travel_assistant.server:main"
+
 [project.urls]
 Homepage = "https://github.com/yourusername/unified-travel-concierge"
 Repository = "https://github.com/yourusername/unified-travel-concierge.git"

@@ -1459,7 +1459,8 @@ This combined server integrates the best of both consumer travel platforms (Goog
 
 This combined server provides the most comprehensive travel planning capabilities available, leveraging both consumer platforms and professional travel industry systems! 🌎✈️🏨🎭💰"""
 
-if __name__ == "__main__":
+def main():
+    """Entry point for the Travel Assistant MCP server."""
     import sys
     import argparse
 
@@ -1474,3 +1475,6 @@ if __name__ == "__main__":
         transport_kwargs["port"] = args.port
 
     mcp.run(transport=args.transport, show_banner=True, **transport_kwargs)
+
+if __name__ == "__main__":
+    main()
