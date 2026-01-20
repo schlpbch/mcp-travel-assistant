@@ -41,13 +41,16 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
     api_key = os.environ.get("AMADEUS_API_KEY")
     api_secret = os.environ.get("AMADEUS_API_SECRET")
 
-    if not api_key or not api_secret:
-        raise ValueError("AMADEUS_API_KEY and AMADEUS_API_SECRET must be set as environment variables")
-
-    amadeus_client = Client(
-        client_id=api_key,
-        client_secret=api_secret
-    )
+    amadeus_client = None
+    if api_key and api_secret:
+        try:
+            amadeus_client = Client(
+                client_id=api_key,
+                client_secret=api_secret
+            )
+        except Exception as e:
+            # Log but don't fail startup - Amadeus tools will handle missing client gracefully
+            pass
 
     try:
         yield AppContext(amadeus_client=amadeus_client)

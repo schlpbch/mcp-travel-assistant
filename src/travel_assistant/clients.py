@@ -23,10 +23,15 @@ class SerpAPIClient:
 
     def __init__(self):
         self.base_url = "https://serpapi.com/search"
-        self.api_key = get_serpapi_key()
+        try:
+            self.api_key = get_serpapi_key()
+        except ValueError:
+            self.api_key = None
 
     def _request(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Make a request to SerpAPI."""
+        if not self.api_key:
+            return {"error": "SERPAPI_KEY environment variable not set"}
         params["api_key"] = self.api_key
         try:
             response = requests.get(self.base_url, params=params, timeout=10)
@@ -182,10 +187,15 @@ class ExchangeRateClient:
 
     def __init__(self):
         self.base_url = "https://v6.exchangerate-api.com/v6"
-        self.api_key = get_exchange_rate_api_key()
+        try:
+            self.api_key = get_exchange_rate_api_key()
+        except ValueError:
+            self.api_key = None
 
     def convert(self, from_currency: str, to_currency: str, amount: float = 1.0) -> Dict[str, Any]:
         """Convert between currencies."""
+        if not self.api_key:
+            return {"error": "EXCHANGE_RATE_API_KEY environment variable not set"}
         url = f"{self.base_url}/{self.api_key}/pair/{from_currency.upper()}/{to_currency.upper()}"
         try:
             response = requests.get(url, timeout=10)

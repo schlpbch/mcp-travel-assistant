@@ -62,3 +62,16 @@ target-version = ['py38']
 [tool.isort]
 profile = "black"
 line_length = 100
+
+[tool.uv.workspace]
+members = [
+    ".",
+]
+
+[tool.uv.sources]
+travel-assistant = { workspace = true, editable = true }
+
+[dependency-groups]
+dev = [
+    "travel-assistant",
+]
