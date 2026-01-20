@@ -95,8 +95,8 @@ def search_flights_serpapi(
     language: str = "en",
     max_results: int = 10
 ) -> Dict[str, Any]:
-    """Searches Google Flights for best deals and routes. Takes departure location, arrival destination, outbound date, optional return date, passenger counts by type (adults, children, infants), seat class, currency, language, and max results. Returns curated flight options with prices, schedules, and airline booking links ranked by value."""
-    
+    """Searches Google Flights for best deals and routes with carbon emissions data. Takes departure location, arrival destination, outbound date, optional return date, passenger counts by type (adults, children, infants), seat class, currency, language, and max results. Returns curated flight options with prices, schedules, airline booking links, and CO2 emissions per flight ranked by value."""
+
     try:
         # Build search parameters (client adds engine and api_key)
         params = {
@@ -112,6 +112,7 @@ def search_flights_serpapi(
             "currency": currency,
             "hl": language,
             "gl": country,
+            "emissions": 1,  # Request emissions data from SerpAPI
         }
 
         if return_date and trip_type == 1:  # Round trip
@@ -119,7 +120,25 @@ def search_flights_serpapi(
 
         # Make API request (client handles engine, api_key, timeout)
         flight_data = serpapi_client.search_flights(**params)
-        
+
+        # Extract and process emissions data from flights
+        def extract_emissions(flights):
+            """Extract carbon emissions data from flight list."""
+            processed_flights = []
+            for flight in flights:
+                flight_copy = flight.copy()
+                # Extract carbon_emissions if present
+                if "carbon_emissions" in flight:
+                    emissions = flight.get("carbon_emissions", {})
+                    flight_copy["carbon_emissions"] = {
+                        "this_flight_grams": emissions.get("this_flight"),
+                        "typical_for_route_grams": emissions.get("typical_for_this_route"),
+                        "difference_percent": emissions.get("difference_percent"),
+                        "note": "Negative difference % indicates lower emissions than typical for this route"
+                    }
+                processed_flights.append(flight_copy)
+            return processed_flights
+
         # Process flight results
         processed_results = {
             "provider": "Google Flights (SerpAPI)",
@@ -137,16 +156,17 @@ def search_flights_serpapi(
                 },
                 "travel_class": ["Economy", "Premium economy", "Business", "First"][travel_class - 1],
                 "currency": currency,
+                "emissions_included": True,
                 "search_timestamp": datetime.now().isoformat()
             },
-            "best_flights": flight_data.get("best_flights", [])[:max_results],
-            "other_flights": flight_data.get("other_flights", [])[:max_results],
+            "best_flights": extract_emissions(flight_data.get("best_flights", [])[:max_results]),
+            "other_flights": extract_emissions(flight_data.get("other_flights", [])[:max_results]),
             "price_insights": flight_data.get("price_insights", {}),
             "airports": flight_data.get("airports", [])
         }
-        
+
         return processed_results
-        
+
     except ValueError as e:
         return format_error_response(str(e))
     except Exception as e:
@@ -170,7 +190,7 @@ def search_flights_amadeus(
     maxPrice: int = None,
     max: int = 250
 ) -> str:
-    """Searches Amadeus Global Distribution System for professional flight offers. Takes departure/arrival airport codes (IATA), travel dates, passenger counts, seat classes, airline filters, and optional preferences. Returns curated flight options with pricing, schedules, seat availability, and booking confirmation numbers."""
+    """Searches Amadeus Global Distribution System for professional flight offers with carbon emissions data. Takes departure/arrival airport codes (IATA), travel dates, passenger counts, seat classes, airline filters, and optional preferences. Returns curated flight options with pricing, schedules, seat availability, booking confirmation numbers, and per-cabin CO2 emissions."""
     if adults and not (1 <= adults <= 9):
         return format_error_response("Adults must be between 1 and 9")
 
@@ -208,7 +228,31 @@ def search_flights_amadeus(
         ctx.info(f"API parameters: {json.dumps(params)}")
 
         response = amadeus_client.shopping.flight_offers_search.get(**params)
-        return format_amadeus_response(response.body)
+        result = response.body
+
+        # Process emissions data from flight offers
+        if "data" in result and isinstance(result["data"], list):
+            for flight_offer in result["data"]:
+                # Extract and format co2Emissions if present
+                if "co2Emissions" in flight_offer:
+                    emissions_array = flight_offer.get("co2Emissions", [])
+                    flight_offer["co2_emissions_summary"] = {
+                        "emissions_by_cabin": [
+                            {
+                                "cabin": emission.get("cabin", "UNKNOWN"),
+                                "weight_kg": emission.get("weight"),
+                                "per_passenger_kg": round(emission.get("weight", 0) / (adults or 1), 2)
+                            }
+                            for emission in emissions_array
+                        ],
+                        "total_weight_kg": sum(e.get("weight", 0) for e in emissions_array),
+                        "unit": "kilograms"
+                    }
+
+        result["provider"] = "Amadeus GDS"
+        result["emissions_included"] = bool("co2Emissions" in result.get("data", [{}])[0] if result.get("data") else False)
+        result["search_timestamp"] = datetime.now().isoformat()
+        return json.dumps(result)
     except ResponseError as error:
         error_msg = f"Amadeus API error: {str(error)}"
         ctx.info(f"Error: {error_msg}")

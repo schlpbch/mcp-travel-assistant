@@ -238,3 +238,21 @@ class ErrorResponse(BaseModel):
     """Error response model."""
     error: str
     details: Optional[str] = None
+
+
+# =====================================================================
+# EMISSIONS MODELS
+# =====================================================================
+
+class GoogleFlightsEmissions(BaseModel):
+    """Carbon emissions data from Google Flights (SerpAPI)."""
+    this_flight: Optional[int] = Field(None, description="CO2 emissions for this flight in grams")
+    typical_for_this_route: Optional[int] = Field(None, description="Typical CO2 emissions for this route in grams")
+    difference_percent: Optional[int] = Field(None, description="Percentage difference vs typical (negative = better)")
+
+
+class AmadeusEmissions(BaseModel):
+    """Carbon emissions data from Amadeus GDS."""
+    weight: float = Field(..., description="CO2 emissions weight")
+    weightUnit: str = Field(..., description="Unit of weight (e.g., 'KG')")
+    cabin: Optional[str] = Field(None, description="Cabin class this emissions applies to (e.g., 'ECONOMY', 'BUSINESS')")

@@ -21,6 +21,8 @@ from travel_assistant.models import (
     CurrencyConversion,
     APIResponse,
     ErrorResponse,
+    GoogleFlightsEmissions,
+    AmadeusEmissions,
 )
 
 
@@ -494,6 +496,111 @@ class TestErrorResponse:
         error = ErrorResponse(error="Invalid request")
         assert error.error == "Invalid request"
         assert error.details is None
+
+
+# =====================================================================
+# EMISSIONS MODELS TESTS
+# =====================================================================
+
+
+class TestGoogleFlightsEmissions:
+    """Test GoogleFlightsEmissions Pydantic model."""
+
+    def test_valid_google_flights_emissions(self):
+        """Test creating valid GoogleFlightsEmissions with all fields."""
+        emissions = GoogleFlightsEmissions(
+            this_flight=81500,
+            typical_for_this_route=133000,
+            difference_percent=-39,
+        )
+        assert emissions.this_flight == 81500
+        assert emissions.typical_for_this_route == 133000
+        assert emissions.difference_percent == -39
+
+    def test_google_flights_emissions_partial(self):
+        """Test GoogleFlightsEmissions with partial data."""
+        emissions = GoogleFlightsEmissions(
+            this_flight=81500,
+        )
+        assert emissions.this_flight == 81500
+        assert emissions.typical_for_this_route is None
+        assert emissions.difference_percent is None
+
+    def test_google_flights_emissions_all_none(self):
+        """Test GoogleFlightsEmissions with all None values."""
+        emissions = GoogleFlightsEmissions()
+        assert emissions.this_flight is None
+        assert emissions.typical_for_this_route is None
+        assert emissions.difference_percent is None
+
+    def test_google_flights_emissions_description(self):
+        """Test that GoogleFlightsEmissions fields have descriptions."""
+        # Check that model schema has field descriptions
+        schema = GoogleFlightsEmissions.model_json_schema()
+        assert "properties" in schema
+        assert "this_flight" in schema["properties"]
+        assert "typical_for_this_route" in schema["properties"]
+        assert "difference_percent" in schema["properties"]
+
+
+class TestAmadeusEmissions:
+    """Test AmadeusEmissions Pydantic model."""
+
+    def test_valid_amadeus_emissions_economy(self):
+        """Test creating valid AmadeusEmissions for economy cabin."""
+        emissions = AmadeusEmissions(
+            weight=90.39,
+            weightUnit="KG",
+            cabin="ECONOMY",
+        )
+        assert emissions.weight == 90.39
+        assert emissions.weightUnit == "KG"
+        assert emissions.cabin == "ECONOMY"
+
+    def test_valid_amadeus_emissions_business(self):
+        """Test creating AmadeusEmissions for business cabin."""
+        emissions = AmadeusEmissions(
+            weight=180.78,
+            weightUnit="KG",
+            cabin="BUSINESS",
+        )
+        assert emissions.weight == 180.78
+        assert emissions.cabin == "BUSINESS"
+
+    def test_amadeus_emissions_without_cabin(self):
+        """Test AmadeusEmissions without cabin specification."""
+        emissions = AmadeusEmissions(
+            weight=90.39,
+            weightUnit="KG",
+        )
+        assert emissions.weight == 90.39
+        assert emissions.cabin is None
+
+    def test_amadeus_emissions_zero_weight(self):
+        """Test AmadeusEmissions with zero weight (edge case)."""
+        emissions = AmadeusEmissions(
+            weight=0.0,
+            weightUnit="KG",
+        )
+        assert emissions.weight == 0.0
+
+    def test_amadeus_emissions_large_weight(self):
+        """Test AmadeusEmissions with large weight values."""
+        emissions = AmadeusEmissions(
+            weight=1500.5,
+            weightUnit="KG",
+            cabin="FIRST",
+        )
+        assert emissions.weight == 1500.5
+        assert emissions.cabin == "FIRST"
+
+    def test_amadeus_emissions_description(self):
+        """Test that AmadeusEmissions fields have descriptions."""
+        schema = AmadeusEmissions.model_json_schema()
+        assert "properties" in schema
+        assert "weight" in schema["properties"]
+        assert "weightUnit" in schema["properties"]
+        assert "cabin" in schema["properties"]
 
 
 class TestAmadeusHotelOfferParams:
