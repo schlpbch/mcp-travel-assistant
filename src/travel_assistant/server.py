@@ -244,7 +244,7 @@ def search_hotels_serpapi(
     bedrooms: Optional[int] = None,
     max_results: int = 20
 ) -> Dict[str, Any]:
-    """Searches Google Hotels for accommodation options. Takes destination, check-in date, check-out date, guest count, sort preference, and optional filters (amenities, price range, star rating). Returns available hotels with prices, ratings, reviews, and booking links."""
+    """Searches Google Hotels for accommodations including hotels, vacation rentals, and boutiques. Takes destination, check-in/out dates, guest count, optional filters (star rating, amenities, brands, property types, free cancellation, special offers). Returns available options with prices, ratings, reviews, photos, and direct booking links."""
     
     try:
         # Build search parameters (client adds engine and api_key)
@@ -323,7 +323,7 @@ def search_hotels_amadeus_by_city(
     ratings: str = None,
     hotelSource: str = None
 ) -> str:
-    """Searches Amadeus hotel inventory by city code (IATA). Takes city code, optional radius, hotel chain filters, amenities, ratings, and content source. Returns hotel availability with rates, room types, and cancellation policies."""
+    """Searches Amadeus professional hotel inventory by city IATA code. Takes city code, optional search radius (KM/MI), hotel chain codes, amenities (WiFi, Spa, Pool, etc.), star ratings (1-5), and content source. Returns professional rates, room inventory, cancellation policies, and availability. Use for business travel and professional bookings."""
     amadeus_client = ctx.request_context.lifespan_context.amadeus_client
     params = build_optional_params(
         required_params={"cityCode": cityCode},
@@ -525,7 +525,7 @@ def search_activities_amadeus(
     radius: int = None,
     radiusUnit: str = "KM"
 ) -> str:
-    """Searches Amadeus activity database by location. Takes latitude, longitude, optional radius, activity categories, and language preference. Returns activities with descriptions, pricing, duration, booking requirements, and user ratings."""
+    """Searches Amadeus professional activities and tours by geographic coordinates. Takes latitude, longitude, optional search radius (KM default), returns curated tours and experiences with descriptions, pricing, duration, age/health requirements, cancellation policies, and user ratings. Use for activity planning and booking verified tour operators."""
     amadeus_client = ctx.request_context.lifespan_context.amadeus_client
     params = {
         "latitude": latitude,
@@ -593,7 +593,7 @@ def geocode_location(
     addressdetails: bool = True,
     country_codes: Optional[str] = None
 ) -> Dict[str, Any]:
-    """Converts location names to geographic coordinates. Takes location query and optional language/country filters. Returns top matches with latitude, longitude, timezone, country, and admin regions for disambiguation."""
+    """Converts place names and addresses to precise geographic coordinates. Takes location query, optional language preference, country filtering (country codes), and match count preference. Returns latitude/longitude, full address details, timezone info, and disambiguation data. Use for flight/hotel searches, activity mapping, and route planning."""
     
     try:
         geocode, _ = get_geolocator()
@@ -661,19 +661,7 @@ def calculate_distance(
     lon2: float,
     unit: str = "km"
 ) -> Dict[str, Any]:
-    """
-    Measures distances between any two places on Earth. Perfect for planning travel routes and optimizing your itinerary.
-    
-    Args:
-        lat1: Latitude of your first location
-        lon1: Longitude of your first location  
-        lat2: Latitude of your destination
-        lon2: Longitude of your destination
-        unit: Your preferred distance unit ("km" for kilometers, "miles" for miles, "nm" for nautical miles)
-        
-    Returns:
-        Precise distance measurements to help you plan travel times and routes
-    """
+    """Calculates geodetic distance between two geographic coordinates. Takes latitude/longitude pairs for two locations and unit preference (km, miles, nm). Returns distance in requested unit plus all formats. Use for route optimization, travel time estimation, and itinerary planning."""
     
     try:
         from geopy.distance import geodesic
@@ -724,15 +712,7 @@ def convert_currency(
     amount: float = 1.0,
     language: str = "en"
 ) -> Dict[str, Any]:
-    """
-    Gets conversion rates based on real-time real time data using ExchangeRate-API.
-    
-    Args:
-        from_currency: Source currency code (e.g., 'USD')
-        to_currency: Target currency code (e.g., 'EUR')
-        amount: Amount to convert (default: 1.0)
-        language: Unused; kept for compatibility
-    """
+    """Converts amounts between currencies using real-time exchange rates via ExchangeRate-API. Takes source and target currency codes (USD, EUR, GBP, etc.), optional amount (default 1.0), returns converted amount and current exchange rate. Essential for international travel budgeting, expense tracking, and price comparisons across currencies."""
     try:
         api_key = get_exchange_rate_api_key()
         base_url = f"https://v6.exchangerate-api.com/v6/{api_key}/pair/{from_currency.upper()}/{to_currency.upper()}"
@@ -808,75 +788,72 @@ I'm your comprehensive AI travel specialist with access to BOTH Google Travel Se
     if travel_style:
         prompt += f"\n✈️ **Travel Style**: {travel_style}"
     
-    prompt += f"""
+    prompt += """
+# YOUR COMPLETE DUAL-POWERED TRAVEL EXPERIENCE
 
-**YOUR COMPLETE DUAL-POWERED TRAVEL EXPERIENCE:**
+## Phase 0 — Rail & Ground Transport Planning
 
-✈️ **PHASE 1: Flight Discovery & Comparison**
-   🌐 **Google Flights Search** - Use search_flights_serpapi() for comprehensive consumer flight options
-   🏢 **Amadeus Professional Search** - Use search_flights_amadeus() for professional airline inventory
-   • Compare results from both systems to find the absolute best deals
-   • Access both consumer-friendly Google results AND professional travel agent data
-   • Get price insights, schedule optimization, and booking flexibility options
+## Phase 1 — Flight Discovery & Comparison
+- **Google Flights Search** — use `search_flights_serpapi()` for consumer flight options.
+- **Amadeus Professional Search** — use `search_flights_amadeus()` for professional airline inventory.
+- Compare results from both systems to find the best deals, access consumer and agent data, and get price insights and schedule optimization.
 
-🏨 **PHASE 2: Hotel & Accommodation Discovery**
-   🌐 **Google Hotels Search** - Use search_hotels_serpapi() for comprehensive accommodation options
-   🏢 **Amadeus Hotel Search** - Use search_hotels_amadeus_by_city() or search_hotels_amadeus_by_geocode()
-   🏨 **Professional Hotel Offers** - Use search_hotel_offers_amadeus() for real-time availability and pricing
-   • Access vacation rentals, boutique hotels, and major chains through Google
-   • Get professional rates and detailed property information through Amadeus
-   • Compare pricing and availability across both platforms
+## Phase 2 — Hotel & Accommodation Discovery
+- **Google Hotels** — `search_hotels_serpapi()` for consumer options (vacation rentals, reviews, special offers).
+- **Amadeus Hotel Search** — `search_hotels_amadeus_by_city()` or `search_hotels_amadeus_by_geocode()` for professional inventory.
+- **Professional Hotel Offers** — `search_hotel_offers_amadeus()` for real-time availability and pricing.
+- Compare pricing and availability across both platforms.
 
-🎭 **PHASE 3: Events & Activities Discovery**
-   🌐 **Google Events** - Use search_events_serpapi() for local events, concerts, festivals
-   🏢 **Amadeus Activities** - Use search_tours_activities_amadeus() for professional tour operations
-   • Find everything from local festivals to professional guided tours
-   • Access both consumer events and curated travel experiences
+## Phase 3 — Events & Activities Discovery
+- **Google Events** — `search_events_serpapi()` for local events, concerts, and festivals.
+- **Amadeus Activities** — `search_tours_activities_amadeus()` for professional tours and curated experiences.
+- Use both to combine consumer events and professional offerings.
 
-🌍 **PHASE 4: Location Intelligence & Navigation**
-   • Use geocode_location() to pinpoint exact coordinates for all destinations
-   • Use calculate_distance() to optimize your itinerary and travel routes
-   • Map out efficient daily routes between attractions, hotels, and activities
+## Phase 4 — Location Intelligence & Navigation
+- Use `geocode_location()` to get precise coordinates for destinations.
+- Use `calculate_distance()` to optimize routes and daily itineraries.
+- Map efficient daily routes between attractions, hotels, and activities.
 
-🌦️ **PHASE 5: Weather Intelligence & Activity Planning**
-   • Use get_weather_forecast() to understand conditions during your visit
-   • Use get_current_conditions() for real-time weather updates
-   • Plan activities around optimal weather windows
+## Phase 5 — Weather Intelligence & Activity Planning
+- Use `get_weather_forecast()` to understand conditions during the visit.
+- Use `get_current_conditions()` for real-time weather updates.
+- Plan activities around optimal weather windows.
 
-**PHASE 6: Financial Planning & Currency Strategy**
-   • Use convert_currency() for accurate budget planning and expense tracking
-   • Use lookup_stock() to monitor travel industry investments if relevant
-   • Track exchange rates and optimize currency conversion timing
+## Phase 6 — Financial Planning & Currency Strategy
+- Use `convert_currency()` for accurate budget planning and expense tracking.
+- Use `lookup_stock()` to monitor travel-industry investments if relevant.
+- Track exchange rates and optimize currency conversion timing.
 
-🎨 **PRESENTATION STYLE**: 
-Present everything as your expert travel friend who has access to BOTH consumer travel platforms AND professional travel industry systems! Provide detailed comparisons, insider tips, and create comprehensive travel plans.
+## Presentation Style
+Present everything as an expert travel friend with access to BOTH consumer and professional travel platforms: provide detailed comparisons, insider tips, and comprehensive travel plans.
 
-**AVAILABLE DUAL-PLATFORM TOOLS:**
+## Available Dual-Platform Tools
 
-**FLIGHT SEARCH:**
-- 🌐 search_flights_serpapi() - Google Flights consumer search
-- 🏢 search_flights_amadeus() - Amadeus professional GDS search
+**Flight search**
+- `search_flights_serpapi()` — Google Flights (consumer)
+- `search_flights_amadeus()` — Amadeus GDS (professional)
 
-**HOTEL SEARCH:**
-- 🌐 search_hotels_serpapi() - Google Hotels consumer search
-- 🏢 search_hotels_amadeus_by_city() - Amadeus professional city search
-- 🏢 search_hotels_amadeus_by_geocode() - Amadeus professional coordinate search
-- 🏢 search_hotel_offers_amadeus() - Amadeus real-time offers and availability
+**Hotel search**
+- `search_hotels_serpapi()` — Google Hotels (consumer)
+- `search_hotels_amadeus_by_city()` — Amadeus professional city search
+- `search_hotels_amadeus_by_geocode()` — Amadeus professional coordinate search
+- `search_hotel_offers_amadeus()` — Amadeus real-time offers and availability
 
-**EVENTS & ACTIVITIES:**
-- 🌐 search_events_serpapi() - Google Events consumer search
-- 🏢 search_tours_activities_amadeus() - Amadeus professional activities
-- 🏢 get_activity_details_amadeus() - Detailed activity information
+**Events & activities**
+- `search_events_serpapi()` — Google Events (consumer)
+- `search_tours_activities_amadeus()` — Amadeus professional activities
+- `get_activity_details_amadeus()` — Detailed activity information
 
-**LOCATION & UTILITIES:**
-- geocode_location() - Precise location finding
-- calculate_distance() - Route optimization
-- get_weather_forecast() - Weather planning
-- get_current_conditions() - Real-time weather
-- convert_currency() - Financial planning
-- lookup_stock() - Travel investment tracking
+**Location & utilities**
+- `geocode_location()` — Precise location finding
+- `calculate_distance()` — Route optimization
+- `get_weather_forecast()` — Weather planning
+- `get_current_conditions()` — Real-time weather
+- `convert_currency()` — Financial planning
+- `lookup_stock()` — Travel investment tracking
 
-Let's create your perfect travel experience using BOTH consumer and professional travel platforms! 🌎✨"""
+Let's create your perfect travel experience using BOTH consumer and professional travel platforms!
+"""
 
     return prompt
 
