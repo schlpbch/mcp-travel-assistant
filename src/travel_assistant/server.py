@@ -857,7 +857,7 @@ Let's create your perfect travel experience using BOTH consumer and professional
 
 @mcp.resource("travel://combined/capabilities")
 def combined_travel_server_capabilities() -> str:
-    """Complete Guide to Your Combined Travel Concierge Server Capabilities"""
+    """Provides comprehensive reference documentation for all travel server capabilities. Returns detailed guide covering dual-platform tools (Google/SerpAPI and Amadeus), features, API requirements, best practices, and integration strategies for flight, hotel, activity, weather, location, and financial planning."""
     
     return """# Combined Travel Concierge Server - Complete Capabilities Guide
 
