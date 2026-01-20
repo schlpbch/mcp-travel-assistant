@@ -55,6 +55,11 @@ class SerpAPIClient:
         params["engine"] = "google_events"
         return self._request(params)
 
+    def lookup_stock(self, **params) -> Dict[str, Any]:
+        """Look up stock information using Google Finance."""
+        params["engine"] = "google_finance"
+        return self._request(params)
+
 
 # =====================================================================
 # AMADEUS CLIENT WRAPPER

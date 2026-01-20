@@ -887,6 +887,7 @@ I'm your comprehensive AI travel specialist with access to BOTH Google Travel Se
 
 ## Phase 6 — Financial Planning & Currency Strategy
 - Use `convert_currency()` for accurate budget planning and expense tracking.
+- Use `lookup_stock()` to monitor travel-industry investments if relevant.
 - Track exchange rates and optimize currency conversion timing.
 
 ## Presentation Style
@@ -915,6 +916,7 @@ Present everything as an expert travel friend with access to BOTH consumer and p
 - `get_weather_forecast()` — Weather planning
 - `get_current_conditions()` — Real-time weather
 - `convert_currency()` — Financial planning
+- `lookup_stock()` — Travel investment tracking
 
 Let's create your perfect travel experience using BOTH consumer and professional travel platforms!
 """
@@ -1167,6 +1169,7 @@ Use `AccessibilityRequest` model to document traveler needs:
 
 **Financial Planning:**
 - Use currency conversion for accurate international budget planning
+- Monitor travel industry stocks for investment insights
 - Track exchange rates for optimal conversion timing
 
 This combined server provides the most comprehensive travel planning capabilities available, leveraging both consumer platforms and professional travel industry systems! 🌎✈️🏨🎭💰"""

@@ -228,6 +228,19 @@ class CurrencyConversion(BaseModel):
     converted_amount: float
     search_timestamp: str
 
+
+# =====================================================================
+# STOCK MODELS
+# =====================================================================
+
+class StockParams(BaseModel):
+    """Parameters for stock lookup."""
+    symbol: str = Field(..., description="Stock symbol (e.g., 'DAL' for Delta, 'MAR' for Marriott)")
+    exchange: Optional[str] = Field(None, description="Stock exchange (e.g., 'NASDAQ', 'NYSE')")
+    window: Optional[str] = Field(None, description="Historical window ('1D', '5D', '1M', '6M', '1Y', '5Y', 'MAX')")
+    language: str = Field("en", description="Language code")
+
+
 # =====================================================================
 # API RESPONSE MODELS
 # =====================================================================

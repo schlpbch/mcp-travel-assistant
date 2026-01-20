@@ -36,8 +36,9 @@
 12. **get_current_conditions** - Real-time weather conditions
 13. **get_weather_forecast** - Weather forecasts
 
-### 💰 FINANCIAL SERVICES (1 tool)
+### 💰 FINANCIAL SERVICES (2 tools)
 14. **convert_currency** - Real-time currency conversion
+15. **lookup_stock** - Travel industry stock monitoring
 
 ## 📝 PROMPTS (1 total)
 1. **travel_planning_prompt** - Comprehensive travel planning assistant
@@ -69,7 +70,7 @@
 - **Complete Trip Planning**: Flights, hotels, activities, weather
 - **Real-time Data**: Live pricing, availability, conditions
 - **Location Intelligence**: Geocoding, distance calculations  
-- **Financial Tools**: Currency conversion
+- **Financial Tools**: Currency conversion, travel stock monitoring
 
 ### PROFESSIONAL-GRADE CAPABILITIES
 - **Amadeus GDS Integration**: Access to travel industry systems
