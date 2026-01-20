@@ -1358,6 +1358,503 @@ Use `AccessibilityRequest` model to document traveler needs:
 
 This combined server provides the most comprehensive travel planning capabilities available, leveraging both consumer platforms and professional travel industry systems! 🌎✈️🏨🎭💰"""
 
+@mcp.prompt()
+def accessible_trip_planner(
+    destination: str,
+    departure_location: str = "",
+    duration_days: int = 3,
+    travelers: int = 1,
+    wheelchair_user: bool = False,
+    deaf: bool = False,
+    blind: bool = False,
+    reduced_mobility: bool = False,
+    special_requirements: str = ""
+) -> str:
+    """Generate personalized accessible travel plan with mobility and sensory accommodations.
+
+    This prompt helps plan trips for travelers with accessibility needs by:
+    - Finding wheelchair-accessible flights and hotels
+    - Recommending proper IATA SSR codes (WCHR, WCHS, STCR, DEAF, BLND, PRMK)
+    - Identifying accessible facilities and services
+    - Coordinating with companion/assistant travelers
+    - Providing sensory accessibility guidance"""
+
+    accessibility_needs = []
+    if wheelchair_user:
+        accessibility_needs.append("wheelchair accessibility (WCHR/WCHS SSR codes, stowage, accessible facilities)")
+    if deaf:
+        accessibility_needs.append("deaf accessibility (visual alerts, DEAF SSR code)")
+    if blind:
+        accessibility_needs.append("blind accessibility (audio assistance, BLND SSR code)")
+    if reduced_mobility:
+        accessibility_needs.append("reduced mobility support (extra legroom, assistance, accessible entrances)")
+
+    prompt = f"""♿ **ACCESSIBLE TRAVEL PLANNING ASSISTANT** ♿
+
+You're helping plan an inclusive, accessible trip to {destination}"""
+
+    if departure_location:
+        prompt += f" from {departure_location}"
+
+    prompt += f" for {duration_days} days with {travelers} traveler{'s' if travelers != 1 else ''}."
+
+    if accessibility_needs:
+        prompt += f"\n\n**Accessibility Requirements:**\n"
+        for i, need in enumerate(accessibility_needs, 1):
+            prompt += f"{i}. {need}\n"
+
+    if special_requirements:
+        prompt += f"\n**Special Requirements:** {special_requirements}\n"
+
+    prompt += """
+## ACCESSIBLE TRIP PLANNING WORKFLOW
+
+### Phase 1: Flight Search with Accessibility
+1. **Search Flights:**
+   - Use `search_flights_serpapi()` OR `search_flights_amadeus()`
+   - Results include accessibility_note with IATA SSR codes
+
+2. **Accessibility Checklist:**
+   - ✓ Wheelchair users: Request WCHR (standard wheelchair) or WCHS (with stowage)
+   - ✓ Stretcher needed: Request STCR code
+   - ✓ Deaf traveler: Request DEAF code (visual alerts)
+   - ✓ Blind traveler: Request BLND code (audio assistance)
+   - ✓ Mobility disability: Request PRMK code
+   - ✓ All travelers: Specify special meals (diabetic, low-sodium, vegetarian, etc.)
+   - ✓ Companion: Include assistant/escort passenger in booking
+
+3. **Contact Airline:**
+   - Provide SSR codes with booking reference
+   - Request accessible seating (bulkhead, extra legroom)
+   - Confirm wheelchair stowage/storage
+   - Arrange boarding assistance and special accommodations
+
+### Phase 2: Hotel Search with Accessibility
+1. **Search Hotels:**
+   - Use `search_hotels_serpapi()` OR `search_hotels_amadeus_by_city()`
+   - Results include accessibility field with facility details
+
+2. **Accessibility Features to Verify:**
+   - Wheelchair accessible rooms (Amenity ID 53 in SerpAPI)
+   - Accessible bathroom types: roll-in shower, grab bars, accessible toilet
+   - Accessible parking spaces (ground level/reserved)
+   - Level or ramped entrance
+   - Accessible elevator to all floors
+   - Service animals allowed (guide dogs, emotional support animals)
+   - Accessible common areas (lobby, restaurant, conference rooms)
+
+3. **Before Booking:**
+   - Call hotel to confirm accessible room availability
+   - Verify specific bathroom features (roll-in vs tub)
+   - Confirm parking availability and proximity
+   - Ask about accessibility equipment (grab bars, shower chairs)
+   - Discuss any special equipment you're bringing
+
+### Phase 3: Activities & Navigation
+1. **Location Mapping:**
+   - Use `geocode_location()` to find precise coordinates of attractions
+   - Use `calculate_distance()` to map accessible routes between venues
+   - Plan activities clustered by accessibility
+
+2. **Weather Planning:**
+   - Use `get_weather_forecast()` to plan accessible outdoor activities
+   - Check for weather alerts that might affect mobility
+   - Plan indoor alternatives for extreme weather
+
+3. **Currency & Budget:**
+   - Use `convert_currency()` for accessible accommodation pricing
+   - Budget for accessible transportation (taxi, rideshare with wheelchair lift)
+   - Factor in companion traveler costs if needed
+
+### Phase 4: Swiss Ecosystem (If Applicable)
+For Switzerland trips, leverage the specialized accessible ecosystem:
+- `journey-service-mcp`: Wheelchair-accessible train routing with 4 accessibility levels
+- `swiss-tourism-mcp`: Barrier-free attraction filtering
+- `open-meteo-mcp`: Accessibility-friendly weather planning
+
+## ACCESSIBILITY BEST PRACTICES
+
+**Before Travel:**
+1. Notify airlines/hotels of all accessibility needs 2+ weeks in advance
+2. Confirm accessible features exist at actual facility
+3. Have backup options in case primary choice unavailable
+4. Get written confirmation of accommodations
+5. Arrange transportation with accessible vehicles
+
+**During Travel:**
+1. Arrive early for accessibility support
+2. Reconfirm assistance with staff on arrival
+3. Test accessibility features immediately
+4. Document any accessibility issues
+5. Use accessible restrooms/facilities before activities
+
+**Communication:**
+- Always carry SSR codes in writing
+- Have mobility needs summary in local language
+- Keep hotel/airline contact info handy
+- Share accessibility requirements with traveling companions
+
+This plan ensures you can travel with confidence, independence, and dignity!
+"""
+
+    return prompt
+
+@mcp.prompt()
+def wheelchair_accessible_itinerary(
+    destination: str,
+    duration_days: int = 3,
+    mobility_level: str = "full_time_wheelchair",
+    companion_available: bool = False
+) -> str:
+    """Plan barrier-free itinerary optimized for wheelchair users.
+
+    Mobility levels:
+    - full_time_wheelchair: Uses wheelchair for all activities
+    - part_time_wheelchair: Uses wheelchair for longer distances
+    - reduced_mobility: Can walk short distances with assistance"""
+
+    prompt = f"""♿ **WHEELCHAIR-ACCESSIBLE {duration_days}-DAY ITINERARY FOR {destination.upper()}** ♿
+
+**Mobility Profile:** {mobility_level.replace('_', ' ').title()}"""
+
+    if companion_available:
+        prompt += "\n**Companion/Assistant:** Available"
+    else:
+        prompt += "\n**Companion/Assistant:** Not available - plan for maximum independence"
+
+    prompt += """
+
+## PRE-TRIP ACCESSIBILITY VERIFICATION
+
+Before finalizing any bookings:
+
+1. **Flight Accessibility Checklist:**
+   - [ ] Confirm wheelchair accommodation (WCHR or WCHS code)
+   - [ ] Verify wheelchair stowage/storage available
+   - [ ] Confirm accessible lavatory on aircraft
+   - [ ] Request bulkhead seating if available
+   - [ ] Arrange boarding assistance
+   - [ ] Confirm aisle chair for boarding if needed
+
+2. **Hotel Accessibility Checklist:**
+   - [ ] Wheelchair accessible room confirmed
+   - [ ] Specific bathroom features: roll-in shower, grab bars?
+   - [ ] Clear pathway from parking/entrance to room
+   - [ ] Accessible elevator(s) to all floors
+   - [ ] Accessible common areas visited
+   - [ ] Emergency accessibility procedures explained
+
+3. **Ground Transportation:**
+   - [ ] Accessible taxi/rideshare options available in destination
+   - [ ] Vehicle has wheelchair lift/ramp
+   - [ ] Secure wheelchair parking/restraint
+   - [ ] Driver experience with accessibility
+
+## DAILY ITINERARY PLANNING
+
+### Day 1: Arrival & Orientation
+- Book direct flights or minimal connections (reduces fatigue)
+- Plan light schedule for travel day recovery
+- Orient to hotel accessibility layout and features
+- Test wheelchair access to bathroom, common areas
+- Locate accessible restaurants/dining options
+- Research accessible local transportation
+
+**Activity Suggestions:**
+- Hotel exploration and accessibility familiarization
+- Nearby accessible attractions within walking/wheeling distance
+- Accessible dining experience
+- Early rest for jet lag/travel fatigue
+
+### Days 2-3: Main Activities
+- Cluster accessible attractions geographically
+- Build in rest breaks (2-3 hours between activities)
+- Use accessible transportation exclusively
+- Plan one "flex day" for accessibility issues
+- Include at least one fully indoor activity (weather backup)
+
+**Accessibility-Optimized Activities:**
+- Museums with elevators and accessible displays
+- Accessible outdoor spaces: parks, waterfront with ramps
+- Guided tours with accessibility services
+- Accessible cultural experiences
+- Restaurants with accessible seating areas
+
+### Final Day: Buffer & Recovery
+- Light schedule for return travel
+- Early checkout from hotel (avoid rush)
+- Buffer time for airport accessibility procedures
+- Final accessibility verification before departure
+
+## ACCESSIBLE TRANSPORTATION STRATEGY
+
+1. **Flights:** Use accessible gate boarding, aisle chair if needed
+2. **Taxis/Rideshare:** Pre-book wheelchair-accessible vehicles
+3. **Local Transit:** Research accessible bus/metro routes (if available)
+4. **Rental Cars:** Book wheelchair-accessible rental with hand controls
+5. **Walking:** Plan routes with no more than 10-15 minute segments
+
+## ACCESSIBILITY CONTINGENCY PLANNING
+
+**If accessible room unavailable:**
+- Immediate hotel escalation to manager
+- Transfer to accessible room asap
+- Compensation negotiation
+- Book backup accessible hotel
+
+**If accessible transportation fails:**
+- Have taxi company contact with lift-equipped vehicle
+- Rideshare backup apps
+- Hotel concierge assistance
+- Emergency accessibility coordinator
+
+**If activity inaccessible:**
+- Pre-identified backup activities
+- Flexible budget for alternative accessible options
+- Companion to fetch/carry items if needed
+
+## RESTAURANT & DINING ACCESSIBILITY
+
+- Verify wheelchair access to dining areas
+- Request table away from congested areas if preferred
+- Ask about accessible restroom location
+- Allow extra time for accessible seating arrangement
+
+## PACKING FOR ACCESSIBLE TRAVEL
+
+- Medications and medical equipment (doubles)
+- Wheelchair maintenance supplies
+- Accessibility adapter plugs/chargers
+- Portable grab bars/ramps if hotel verification pending
+- Written accessibility requirements in local language
+- Proof of medical equipment documentation
+
+## POST-ACTIVITY RECOVERY
+
+- Allow 20-30 minute rest after each activity
+- Stay hydrated (wheelchair pushing is physically demanding)
+- Ice/heat therapy for pain/inflammation
+- Accessible spa/massage for muscle recovery
+- Early dinner to avoid crowds at restaurants
+
+Plan achievable, memorable trips without pushing beyond comfort limits!
+"""
+
+    return prompt
+
+@mcp.prompt()
+def sensory_accessible_travel(
+    destination: str,
+    sensory_type: str = "deaf",
+    duration_days: int = 3,
+    special_interests: str = ""
+) -> str:
+    """Plan travel with visual and audio accommodations for sensory accessibility.
+
+    Sensory types:
+    - deaf: Deaf or hard of hearing (needs visual alerts, captioning)
+    - blind: Blind or low vision (needs audio, tactile, descriptive info)
+    - deaf_blind: Deaf-blind (needs both visual and audio alternatives)"""
+
+    sensory_upper = sensory_type.replace('_', ' ').upper()
+    prompt = f"""👁️👂 **SENSORY-ACCESSIBLE TRAVEL PLAN FOR {sensory_upper} TRAVELERS** 👁️👂
+
+Destination: {destination} | Duration: {duration_days} days"""
+
+    if special_interests:
+        prompt += f" | Interests: {special_interests}"
+
+    prompt += """
+
+## FLIGHT ACCESSIBILITY FOR SENSORY NEEDS
+
+### For Deaf Travelers (DEAF SSR Code):
+1. **Before Flight:**
+   - Request DEAF special service code at booking
+   - Request interpreter if needed (airline may provide)
+   - Confirm visual alert system on aircraft
+   - Ask about captioned safety video
+
+2. **During Flight:**
+   - Alert flight attendant of deaf status at check-in
+   - Request aisle seat for better communication access
+   - Ask for written instructions for safety procedures
+   - Confirm visual alarms for emergency situations
+   - Request seat assignment near interpreter if arranged
+
+3. **Important:**
+   - Know plane emergency visual signals
+   - Have written destination address for taxi driver
+   - Bring written communication backup
+
+### For Blind Travelers (BLND SSR Code):
+1. **Before Flight:**
+   - Request BLND special service code at booking
+   - Request audio description or human assistance
+   - Bring guide dog, cane, or emotional support animal (pre-register)
+   - Ask about audio boarding announcements
+
+2. **During Flight:**
+   - Request aisle seat for safe movement
+   - Bring talking watch/phone for time awareness
+   - Ask flight attendant for descriptions of meal service
+   - Confirm accessible lavatory door handle location
+   - Request assistance with tray table navigation
+
+3. **Service Animal:**
+   - Confirm pre-flight and flight acceptance
+   - Bring documentation
+   - Reserve extra space for animal
+   - Plan relief time at layovers
+
+### For Deaf-Blind Travelers:
+1. **Request both DEAF and BLND SSR codes**
+2. **Strongly recommend human interpreter/assistant**
+3. **Pre-arrange tactile communication method**
+4. **Bring tactile communication device (Braille, large print)**
+5. **Request private boarding area for orientation**
+
+## HOTEL ACCESSIBILITY FOR SENSORY NEEDS
+
+### Deaf Travelers - Hotel Checklist:
+- [ ] Visual doorbell/alert system in room
+- [ ] Caption-enabled TV (confirm availability)
+- [ ] TTY (teletype) phone or video relay service
+- [ ] Vibration alert for wake-up/alarms
+- [ ] Request written check-in instructions
+- [ ] Written emergency procedures in large print
+
+### Blind Travelers - Hotel Checklist:
+- [ ] Audio description of room layout
+- [ ] Clear room layout with no hazards
+- [ ] Labeled items/buttons in Braille if possible
+- [ ] Accessible hotel phone with tactile labels
+- [ ] Safe guide dog accommodation
+- [ ] Elevator audio announcements
+- [ ] Tactile information about facilities
+
+### Pre-Arrival Communication:
+- Call hotel 1-2 weeks in advance
+- Explain specific sensory needs
+- Request staff training on accommodation methods
+- Ask for written accessibility summary sent in advance
+
+## ACTIVITY & ATTRACTION ACCESSIBILITY
+
+### For Deaf Travelers:
+1. **Museums & Galleries:**
+   - Request written descriptions of exhibits
+   - Look for captioned video presentations
+   - Ask about visual interpretation services
+   - Use smartphone apps with visual content
+   - Request private docent tour with written notes
+
+2. **Theater & Performances:**
+   - Book CART (Communication Access Realtime Translation)
+   - Request closed captioning or interpreter
+   - Reserve seats with best sightlines
+   - Request written program notes
+
+3. **Restaurants & Entertainment:**
+   - Pre-call to explain deaf status
+   - Request visual signals for attention (light, waves)
+   - Have written menu reviews/descriptions
+   - Write questions in advance or use pen/paper
+
+### For Blind Travelers:
+1. **Museums & Galleries:**
+   - Request audio description tours
+   - Ask for tactile exhibits to explore
+   - Use audio guide systems if available
+   - Request docent verbal descriptions
+   - Bring guide dog or white cane without restriction
+
+2. **Outdoor Activities:**
+   - Request sighted guide or guide dog accommodation
+   - Choose activities with good audio description
+   - Ask about terrain and safety hazards
+   - Request hiking trails with tactile markings
+   - Bring bells/audio feedback device
+
+3. **Food & Dining:**
+   - Ask restaurant to describe menu verbally
+   - Request assistance with navigation to/from restaurant
+   - Ask server to describe meal presentation
+   - Use menu apps with food descriptions
+   - Share dining experience with sighted companion
+
+4. **Transportation:**
+   - Use accessible taxi services with verbal directions
+   - Ride-sharing apps with accessible vehicle options
+   - Public transit with audio announcements
+   - Request station attendant assistance
+
+## COMMUNICATION STRATEGIES
+
+### Deaf Travelers:
+- Carry written destination addresses
+- Use smartphone video relay service for phone calls
+- Pre-write common phrases/questions in destination language
+- Have email/text contact list for emergencies
+- Use translation apps with visual output
+- Bring notepad for written communication
+
+### Blind Travelers:
+- Bring voice-enabled smartphone with screen reader
+- Use talking GPS/navigation apps
+- Record important information as audio notes
+- Bring e-reader with audio/large print capability
+- Use text-to-speech for written information
+- Request verbal assistance from staff/locals
+
+### Both:
+- Carry international accessibility card
+- Have accommodation needs summary in destination language
+- Bring backup communication device
+- Register with embassy if traveling internationally
+
+## SWISS ECOSYSTEM FOR SENSORY ACCESSIBILITY
+
+For Switzerland trips, these specialized MCPs support sensory needs:
+- **journey-service-mcp:** Audio accessibility for train announcements
+- **swiss-tourism-mcp:** Sensory-accessible attraction filtering
+- **open-meteo-mcp:** Audio weather alerts and descriptions
+
+## SAFETY & EMERGENCY PROCEDURES
+
+1. **Know emergency contacts in destination language**
+2. **Understand local emergency numbers**
+3. **Carry medical documentation**
+4. **Pre-register sensory needs with hotel/attractions**
+5. **Have accessible communication backup plan**
+6. **Know accessible nearest hospital**
+7. **Carry written medical history in destination language**
+
+## SAMPLE 3-DAY ITINERARY
+
+### Day 1: Arrival & Orientation
+- Accessible hotel check-in with staff orientation
+- Local accessible transportation exploration
+- Nearby accessible restaurant
+- Early rest for travel recovery
+
+### Day 2: Main Attractions
+- Museum with sensory accommodation (audio/visual description)
+- Accessible outdoor activity with guide/dog
+- Sensory-friendly restaurant experience
+- Rest break for orientation
+
+### Day 3: Cultural Experience
+- Theater/performance with captioning/audio description
+- Local food market with sensory descriptions
+- Accessible shopping/browsing
+- Buffer time before departure
+
+Travel can be rich, meaningful, and fully accessible!
+"""
+
+    return prompt
+
 def main():
     """Entry point for the Travel Assistant MCP server."""
     import sys
