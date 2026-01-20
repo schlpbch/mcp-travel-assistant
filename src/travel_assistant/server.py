@@ -57,6 +57,17 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
 # Initialize FastMCP server with lifespan
 mcp = FastMCP("Travel Concierge", lifespan=app_lifespan)
 
+# Add health check endpoint
+@mcp.custom_route("/health", methods=["GET"])
+async def health_check(request):
+    """Health check endpoint for monitoring and load balancers."""
+    return {
+        "status": "healthy",
+        "service": "Travel Concierge",
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.0"
+    }
+
 # Initialize API clients (created once per server instance)
 serpapi_client = SerpAPIClient()
 
@@ -1446,4 +1457,17 @@ This combined server integrates the best of both consumer travel platforms (Goog
 This combined server provides the most comprehensive travel planning capabilities available, leveraging both consumer platforms and professional travel industry systems! 🌎✈️🏨🎭💰"""
 
 if __name__ == "__main__":
-    mcp.run()
+    import sys
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Travel Assistant MCP Server")
+    parser.add_argument("--transport", type=str, choices=["stdio", "sse", "http"], default="stdio", help="Transport type")
+    parser.add_argument("--port", type=int, default=8000, help="Port for HTTP/SSE transport")
+
+    args = parser.parse_args()
+
+    transport_kwargs = {}
+    if args.transport in ["sse", "http"]:
+        transport_kwargs["port"] = args.port
+
+    mcp.run(transport=args.transport, show_banner=True, **transport_kwargs)
