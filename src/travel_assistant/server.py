@@ -805,9 +805,11 @@ def convert_currency(
         }
         return processed_results
     except requests.exceptions.RequestException as e:
-        return {"error": f"Currency API request failed: {str(e)}"}
+        # SECURITY: Never expose the URL which contains the API key
+        return {"error": "Currency API request failed. Please check currency codes and try again."}
     except Exception as e:
-        return {"error": f"Unexpected error: {str(e)}"}
+        # SECURITY: Generic error without exposing implementation details
+        return {"error": "Currency conversion failed. Please try again."}
 
 
 # =====================================================================

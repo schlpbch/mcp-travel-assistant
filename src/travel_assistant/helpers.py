@@ -52,6 +52,28 @@ def get_geolocator():
     return _get_or_create_geolocator()
 
 
+def sanitize_url_for_logging(url: str) -> str:
+    """Sanitize URLs by replacing API keys with [REDACTED].
+    
+    Handles common API key patterns:
+    - Path-based keys: /v6/{api_key}/pair/... -> /v6/[REDACTED]/pair/...
+    - Query parameters: ?api_key=xxx -> ?api_key=[REDACTED]
+    - Query parameters: &api_key=xxx -> &api_key=[REDACTED]
+    
+    Args:
+        url: URL that may contain API keys
+        
+    Returns:
+        Sanitized URL with API keys replaced by [REDACTED]
+    """
+    import re
+    # Pattern 1: Path-based API keys (ExchangeRate-API style: /v6/{hex_key}/)
+    url = re.sub(r'/v6/[a-f0-9]+/', '/v6/[REDACTED]/', url)
+    # Pattern 2: Query parameter API keys
+    url = re.sub(r'([?&])api_key=[^&]+', r'\1api_key=[REDACTED]', url)
+    return url
+
+
 def format_amadeus_response(response_body: Dict[str, Any]) -> Dict[str, Any]:
     """Format Amadeus API response with metadata.
 

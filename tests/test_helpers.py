@@ -204,3 +204,65 @@ class TestNWSHelpers:
 
         # Should have made exactly one request
         assert len(responses.calls) == 1
+
+
+class TestSecurityHelpers:
+    """Test security-related helper functions."""
+
+    def test_sanitize_url_for_logging_exchangerate_api(self):
+        """Test that ExchangeRate-API keys are redacted from URLs."""
+        from travel_assistant.helpers import sanitize_url_for_logging
+        
+        # Test with real API key pattern (hexadecimal)
+        url = "https://v6.exchangerate-api.com/v6/4b9d09c342e6f730c7d2376e/pair/USD/EUR"
+        sanitized = sanitize_url_for_logging(url)
+        
+        # API key should be redacted
+        assert "4b9d09c342e6f730c7d2376e" not in sanitized
+        assert "[REDACTED]" in sanitized
+        assert "https://v6.exchangerate-api.com/v6/[REDACTED]/pair/USD/EUR" == sanitized
+
+    def test_sanitize_url_for_logging_query_parameter(self):
+        """Test that query parameter API keys are redacted."""
+        from travel_assistant.helpers import sanitize_url_for_logging
+        
+        # Test with query parameter style
+        url = "https://api.example.com/search?api_key=secret123&q=test"
+        sanitized = sanitize_url_for_logging(url)
+        
+        assert "secret123" not in sanitized
+        assert "api_key=[REDACTED]" in sanitized
+        assert "q=test" in sanitized  # Other params should remain
+
+    def test_sanitize_url_for_logging_ampersand_parameter(self):
+        """Test that API keys in middle of query string are redacted."""
+        from travel_assistant.helpers import sanitize_url_for_logging
+        
+        url = "https://api.example.com/search?q=test&api_key=secret456&limit=10"
+        sanitized = sanitize_url_for_logging(url)
+        
+        assert "secret456" not in sanitized
+        assert "api_key=[REDACTED]" in sanitized
+        assert "q=test" in sanitized
+        assert "limit=10" in sanitized
+
+    def test_sanitize_url_for_logging_no_api_key(self):
+        """Test that URLs without API keys are unchanged."""
+        from travel_assistant.helpers import sanitize_url_for_logging
+        
+        url = "https://api.example.com/search?q=test&limit=10"
+        sanitized = sanitize_url_for_logging(url)
+        
+        # Should be unchanged
+        assert sanitized == url
+
+    def test_sanitize_url_for_logging_multiple_patterns(self):
+        """Test sanitization with multiple API key patterns."""
+        from travel_assistant.helpers import sanitize_url_for_logging
+        
+        # Path-based key
+        url1 = "https://v6.exchangerate-api.com/v6/abc123def456/pair/USD/EUR"
+        sanitized1 = sanitize_url_for_logging(url1)
+        assert "abc123def456" not in sanitized1
+        assert "[REDACTED]" in sanitized1
+

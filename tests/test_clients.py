@@ -472,6 +472,51 @@ class TestExchangeRateClient:
 
         assert "error" in result
 
+    @responses.activate
+    def test_convert_http_error_no_key_exposure(self):
+        """Test that API keys are NEVER exposed in error messages (SECURITY)."""
+        responses.add(
+            responses.GET,
+            "https://v6.exchangerate-api.com/v6/test-exchange-key-12345/pair/USD/EUR",
+            status=503,
+        )
+
+        client = ExchangeRateClient()
+        result = client.convert("USD", "EUR")
+
+        assert "error" in result
+        # CRITICAL SECURITY CHECK: Verify API key is NOT in error message
+        assert "test-exchange-key-12345" not in str(result)
+        assert "test-exchange-key-12345" not in result.get("error", "")
+        # Verify we get a user-friendly error without implementation details
+        assert "currency" in result["error"].lower() or "failed" in result["error"].lower()
+        # Ensure no URL is exposed
+        assert "exchangerate-api.com" not in result.get("error", "")
+
+    @responses.activate
+    def test_convert_network_timeout_no_key_exposure(self):
+        """Test that API keys are not exposed during network timeouts (SECURITY)."""
+        import requests
+
+        def timeout_callback(request):
+            raise requests.exceptions.Timeout("Connection timeout")
+
+        responses.add_callback(
+            responses.GET,
+            "https://v6.exchangerate-api.com/v6/test-exchange-key-12345/pair/USD/EUR",
+            callback=timeout_callback,
+            content_type="application/json",
+        )
+
+        client = ExchangeRateClient()
+        result = client.convert("USD", "EUR")
+
+        assert "error" in result
+        # CRITICAL: API key must not be in error message
+        assert "test-exchange-key-12345" not in str(result)
+        assert "test-exchange-key-12345" not in result.get("error", "")
+
+
 # =====================================================================
 # GEOCODING CLIENT TESTS
 # =====================================================================
