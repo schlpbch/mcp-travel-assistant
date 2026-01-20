@@ -8,6 +8,11 @@ from datetime import datetime
 
 from geopy.geocoders import Nominatim
 from geopy.extra.rate_limiter import RateLimiter
+from mcp_accessibility_models import (
+    extract_hotel_accessibility,
+    extract_amadeus_hotel_accessibility,
+    extract_flight_accessibility_from_amadeus,
+)
 
 # Module-level geolocator (initialized once, reused across requests)
 _GEOLOCATOR_INSTANCE = None
@@ -168,110 +173,3 @@ def validate_currency_code(code: str) -> str:
     return code.upper()
 
 
-# =====================================================================
-# ACCESSIBILITY HELPERS
-# =====================================================================
-
-def extract_hotel_accessibility(hotel_property: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract accessibility information from SerpAPI hotel property.
-
-    SerpAPI includes amenities with IDs. Amenity ID 53 = wheelchair accessible.
-
-    Args:
-        hotel_property: Hotel property dict from SerpAPI response
-
-    Returns:
-        Dictionary with accessibility information
-    """
-    amenities = hotel_property.get("amenities", [])
-    amenity_ids = [a.get("id") for a in amenities if isinstance(a, dict) and "id" in a]
-
-    wheelchair_accessible = 53 in amenity_ids
-
-    return {
-        "wheelchair_accessible": wheelchair_accessible,
-        "accessible_room_available": wheelchair_accessible,
-        "wheelchair_amenity_id": 53,
-        "amenities": amenities,
-    }
-
-
-def extract_amadeus_hotel_accessibility(hotel_data: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract accessibility information from Amadeus hotel offer.
-
-    Amadeus returns facility and description data that may contain accessibility info.
-
-    Args:
-        hotel_data: Hotel data dict from Amadeus API response
-
-    Returns:
-        Dictionary with accessibility information
-    """
-    facilities = hotel_data.get("facilities", [])
-    descriptions = hotel_data.get("descriptions", {})
-
-    # Build facility list from facilities array
-    facility_list = []
-    if facilities:
-        for facility in facilities:
-            if isinstance(facility, dict):
-                facility_list.append(facility.get("description", str(facility)))
-            else:
-                facility_list.append(str(facility))
-
-    # Check for accessibility-related facilities
-    accessibility_keywords = [
-        "wheelchair",
-        "accessible",
-        "mobility",
-        "elevator",
-        "ramp",
-        "parking",
-        "bathroom",
-    ]
-
-    has_accessibility = any(
-        keyword.lower() in str(facility).lower() for facility in facility_list
-        for keyword in accessibility_keywords
-    )
-
-    return {
-        "wheelchair_accessible": has_accessibility,
-        "accessible_room_available": has_accessibility,
-        "facility_list": facility_list,
-    }
-
-
-def extract_flight_accessibility_from_amadeus(flight_offer: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract accessibility information from Amadeus flight offer.
-
-    Amadeus returns traveler pricing which may include special service requests (SSR).
-
-    Args:
-        flight_offer: Flight offer dict from Amadeus API response
-
-    Returns:
-        Dictionary with accessibility information and SSR codes
-    """
-    ssr_codes = []
-
-    # Extract SSR codes from traveler pricing if available
-    traveler_pricings = flight_offer.get("travelerPricings", [])
-    for pricing in traveler_pricings:
-        fare_details = pricing.get("fareDetailsBySegment", [])
-        for detail in fare_details:
-            included_checks = detail.get("includedCheckedBags", {})
-            # SSR codes are not typically in the response, but could be passed by user
-            # This is a placeholder for extracting them if available in extended response
-            pass
-
-    return {
-        "wheelchair_available": False,
-        "wheelchair_stowage": False,
-        "accessible_lavatory": False,
-        "extra_legroom_available": False,
-        "special_service_codes": ssr_codes if ssr_codes else None,
-        "companion_required": None,
-        "special_meals_available": False,
-        "notes": "Check with airline for specific accessibility accommodations",
-    }
