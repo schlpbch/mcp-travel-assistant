@@ -14,7 +14,7 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "amadeus>=12.0.0",
     "mcp-accessibility-models @ file:///home/schlpbch/code/mcp-accessibility-models",
-    "swiss-ai-mcp-commons @ file:///home/schlpbch/code/swiss-ai-mcp-commons",
+    "swiss-ai-mcp-commons @ git+https://github.com/schlpbch/swiss-ai-mcp-commons.git@v1.0.0",
 ]
 
 [project.optional-dependencies]
