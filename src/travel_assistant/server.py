@@ -23,6 +23,9 @@ from travel_assistant.helpers import (
     format_amadeus_response,
     format_error_response,
     build_optional_params,
+    extract_hotel_accessibility,
+    extract_amadeus_hotel_accessibility,
+    extract_flight_accessibility_from_amadeus,
 )
 
 load_dotenv()
@@ -157,6 +160,7 @@ def search_flights_serpapi(
                 "travel_class": ["Economy", "Premium economy", "Business", "First"][travel_class - 1],
                 "currency": currency,
                 "emissions_included": True,
+                "accessibility_note": "For accessibility requirements (wheelchair, deaf, blind, stretcher), contact airlines directly with IATA Special Service Request (SSR) codes: WCHR (wheelchair), WCHS (wheelchair with stowage), STCR (stretcher), DEAF, BLND, PRMK (mobility disability)",
                 "search_timestamp": datetime.now().isoformat()
             },
             "best_flights": extract_emissions(flight_data.get("best_flights", [])[:max_results]),
@@ -230,7 +234,7 @@ def search_flights_amadeus(
         response = amadeus_client.shopping.flight_offers_search.get(**params)
         result = response.body
 
-        # Process emissions data from flight offers
+        # Process emissions and accessibility data from flight offers
         if "data" in result and isinstance(result["data"], list):
             for flight_offer in result["data"]:
                 # Extract and format co2Emissions if present
@@ -249,8 +253,12 @@ def search_flights_amadeus(
                         "unit": "kilograms"
                     }
 
+                # Extract accessibility information
+                flight_offer["accessibility"] = extract_flight_accessibility_from_amadeus(flight_offer)
+
         result["provider"] = "Amadeus GDS"
         result["emissions_included"] = bool("co2Emissions" in result.get("data", [{}])[0] if result.get("data") else False)
+        result["accessibility_included"] = True
         result["search_timestamp"] = datetime.now().isoformat()
         return json.dumps(result)
     except ResponseError as error:
@@ -328,7 +336,13 @@ def search_hotels_serpapi(
         # Make API request (client handles engine, api_key, timeout)
         hotel_data = serpapi_client.search_hotels(**params)
         
-        # Process hotel results
+        # Process hotel results with accessibility extraction
+        properties = hotel_data.get("properties", [])[:max_results]
+
+        # Extract accessibility information for each property
+        for prop in properties:
+            prop["accessibility"] = extract_hotel_accessibility(prop)
+
         processed_results = {
             "provider": "Google Hotels (SerpAPI)",
             "search_metadata": {
@@ -343,12 +357,13 @@ def search_hotels_serpapi(
                 "currency": currency,
                 "search_timestamp": datetime.now().isoformat()
             },
-            "properties": hotel_data.get("properties", [])[:max_results],
+            "properties": properties,
             "filters": hotel_data.get("filters", {}),
             "search_parameters": hotel_data.get("search_parameters", {}),
-            "location_info": hotel_data.get("place_results", {})
+            "location_info": hotel_data.get("place_results", {}),
+            "accessibility_included": True
         }
-        
+
         return processed_results
 
     except ValueError as e:
@@ -862,16 +877,23 @@ I'm your comprehensive AI travel specialist with access to BOTH Google Travel Se
 
 **Orchestration Pattern:** Use these MCPs for Switzerland trips, then fall back to global tools for international segments.
 
-## Phase 1 — Flight Discovery & Comparison
+## Phase 1 — Flight Discovery & Comparison (with Accessibility)
 - **Google Flights Search** — use `search_flights_serpapi()` for consumer flight options.
+  - *Accessibility note:* Results include guidance on IATA Special Service Request (SSR) codes: WCHR (wheelchair), WCHS (wheelchair with stowage), STCR (stretcher), DEAF, BLND, PRMK (mobility disability).
 - **Amadeus Professional Search** — use `search_flights_amadeus()` for professional airline inventory.
+  - *Accessibility note:* Results include accessibility information and SSR code recommendations.
 - Compare results from both systems to find the best deals, access consumer and agent data, and get price insights and schedule optimization.
+- **For accessibility requirements:** Contact airline directly with appropriate SSR codes, note special meal requests, and request accessible seating.
 
-## Phase 2 — Hotel & Accommodation Discovery
+## Phase 2 — Hotel & Accommodation Discovery (with Accessibility)
 - **Google Hotels** — `search_hotels_serpapi()` for consumer options (vacation rentals, reviews, special offers).
+  - *Accessibility note:* Amenity ID 53 indicates wheelchair accessible rooms. Results include accessibility indicators.
 - **Amadeus Hotel Search** — `search_hotels_amadeus_by_city()` or `search_hotels_amadeus_by_geocode()` for professional inventory.
+  - *Accessibility note:* Results include facility lists with accessibility information (elevators, accessible bathrooms, parking, etc.).
 - **Professional Hotel Offers** — `search_hotel_offers_amadeus()` for real-time availability and pricing.
+  - *Accessibility note:* Availability includes accessible room inventory and facility details.
 - Compare pricing and availability across both platforms.
+- **For accessibility requirements:** Filter by wheelchair accessibility, accessible bathroom types (roll-in shower, grab bars), accessible parking, accessible entrance, and service animal policies.
 
 ## Phase 3 — Events & Activities Discovery
 - **Google Events** — `search_events_serpapi()` for local events, concerts, and festivals.
@@ -1233,6 +1255,62 @@ This server is part of a **federated MCP ecosystem** for comprehensive Swiss tra
 ```
 
 Claude automatically orchestrates across all configured servers for Switzerland-focused trips.
+
+## ♿ Accessibility Features
+
+This server includes comprehensive accessibility support for travelers with mobility, sensory, or other accessibility needs:
+
+### Flight Accessibility
+- **Wheelchair & Mobility:** WCHR (wheelchair), WCHS (wheelchair with stowage), STCR (stretcher), PRMK (passenger with mobility disability)
+- **Sensory Accessibility:** DEAF (deaf passenger), BLND (blind passenger)
+- **Special Meals:** Diabetic, low-sodium, vegetarian, vegan options
+- **Companion Support:** Option to book companion/assistant passengers
+- **Accessible Lavatories:** Aircraft equipped with wheelchair-accessible restrooms
+- **Extra Legroom:** Available for passengers with mobility limitations
+
+**How to Use:**
+1. Search flights with `search_flights_serpapi()` or `search_flights_amadeus()`
+2. Results include accessibility guidance with IATA SSR codes
+3. Contact airline directly with appropriate SSR code
+4. Request accessible seat, special meals, and assistance during booking
+
+### Hotel Accessibility
+- **Wheelchair Accessible Rooms:** Detected via amenity ID 53 (Google Hotels) or facility lists (Amadeus)
+- **Accessible Bathrooms:** Roll-in showers, grab bars, accessible toilets
+- **Accessible Parking:** Dedicated accessible parking spaces
+- **Accessible Entrance:** Level or ramped entry, automatic doors
+- **Accessible Elevators:** Serving all guest floors
+- **Service Animals:** Pet-friendly policies for guide dogs and service animals
+
+**How to Use:**
+1. Search hotels with `search_hotels_serpapi()` or `search_hotels_amadeus_by_city()`
+2. Results include accessibility indicators:
+   - Google Hotels: Amenity ID 53 = wheelchair accessible
+   - Amadeus: Facility list with accessibility features
+3. Check accessibility object in results for detailed information
+4. Filter by specific accessibility needs (wheelchair access, bathroom type, etc.)
+
+### Accessibility Request Model
+Use `AccessibilityRequest` model to document traveler needs:
+- `wheelchair_user` — Uses wheelchair (may require stowage)
+- `reduced_mobility` — General reduced mobility requiring assistance
+- `deaf` — Deaf traveler (needs visual alerts)
+- `blind` — Blind traveler (needs audio assistance)
+- `stretcher_case` — Medical condition requiring stretcher
+- `companion_required` — Traveling with assistant/companion
+- `special_requirements` — Additional medical or mobility needs
+
+### Data Models
+- **FlightAccessibility:** Flight-level accessibility features and SSR codes
+- **HotelAccessibility:** Hotel-level accessibility features and facilities
+- **AccessibilityRequest:** Traveler accessibility requirements
+
+### Best Practices
+1. **Early Communication:** Inform airlines/hotels about accessibility needs during booking
+2. **SSR Codes:** Use proper IATA codes when contacting airlines
+3. **Verification:** Confirm accessibility features exist before arrival
+4. **Alternatives:** Have backup options in case primary choice unavailable
+5. **Companion Support:** Arrange companion/assistance if needed
 
 ## 🚀 Getting Started
 
