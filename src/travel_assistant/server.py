@@ -95,30 +95,7 @@ def search_flights_serpapi(
     language: str = "en",
     max_results: int = 10
 ) -> Dict[str, Any]:
-    """
-    🛫 Find the perfect flights using Google Flights! Your AI travel concierge searches through thousands of flight options to find the best deals and most convenient routes for your journey.
-    
-    This tool uses Google's comprehensive flight database to provide real-time pricing, schedule information, and booking options from airlines worldwide.
-    
-    Args:
-        departure_id: Where you're flying from - airport code (e.g., 'DEL', 'LKO') or city name
-        arrival_id: Your dream destination - airport code (e.g., 'CDG', 'LHR') or city name  
-        outbound_date: When you want to depart (YYYY-MM-DD format, e.g., '2025-06-15')
-        return_date: When you want to return (YYYY-MM-DD format) - leave empty for one-way trips
-        trip_type: Type of journey (1=Round trip, 2=One way, 3=Multi-city adventure)
-        adults: Number of adult travelers (18+)
-        children: Number of children (2-11 years old)
-        infants_in_seat: Number of infants with their own seat (under 2)
-        infants_on_lap: Number of lap infants (under 2)
-        travel_class: Your preferred comfort level (1=Economy, 2=Premium Economy, 3=Business, 4=First Class)
-        currency: Your preferred currency for pricing (default: USD)
-        country: Your country for localized results
-        language: Your preferred language
-        max_results: Maximum number of flight options to show you
-        
-    Returns:
-        Curated flight options with prices, schedules, and booking details tailored to your travel needs
-    """
+    """Searches Google Flights for best deals and routes. Takes departure location, arrival destination, outbound date, optional return date, passenger counts by type (adults, children, infants), seat class, currency, language, and max results. Returns curated flight options with prices, schedules, and airline booking links ranked by value."""
     
     try:
         # Build search parameters (client adds engine and api_key)
@@ -193,27 +170,7 @@ def search_flights_amadeus(
     maxPrice: int = None,
     max: int = 250
 ) -> str:
-    """
-    🛫 Find professional flight offers using Amadeus Global Distribution System! Access real-time airline inventory with detailed fare information and booking classes.
-
-    This tool provides access to the same flight data used by travel professionals, with comprehensive airline partnerships and detailed fare breakdown information.
-
-    Args:
-        originLocationCode: IATA code of the departure city/airport (e.g., SYD for Sydney)
-        destinationLocationCode: IATA code of the destination city/airport (e.g., BKK for Bangkok)
-        departureDate: Departure date in ISO 8601 format (YYYY-MM-DD, e.g., 2023-05-02)
-        adults: Number of adult travelers (age 12+), must be 1-9
-        returnDate: Return date in ISO 8601 format (YYYY-MM-DD), if round-trip is desired
-        children: Number of child travelers (age 2-11)
-        infants: Number of infant travelers (age <= 2)
-        travelClass: Travel class (ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST)
-        includedAirlineCodes: Comma-separated IATA airline codes to include (e.g., '6X,7X')
-        excludedAirlineCodes: Comma-separated IATA airline codes to exclude (e.g., '6X,7X')
-        nonStop: If true, only non-stop flights are returned
-        currencyCode: ISO 4217 currency code (e.g., EUR for Euro)
-        maxPrice: Maximum price per traveler, positive integer with no decimals
-        max: Maximum number of flight offers to return
-    """
+    """Searches Amadeus Global Distribution System for professional flight offers. Takes departure/arrival airport codes (IATA), travel dates, passenger counts, seat classes, airline filters, and optional preferences. Returns curated flight options with pricing, schedules, seat availability, and booking confirmation numbers."""
     if adults and not (1 <= adults <= 9):
         return format_error_response("Adults must be between 1 and 9")
 
@@ -287,35 +244,7 @@ def search_hotels_serpapi(
     bedrooms: Optional[int] = None,
     max_results: int = 20
 ) -> Dict[str, Any]:
-    """
-    🏨 Discover your perfect accommodation using Google Hotels! Your AI travel concierge will find the ideal lodging that matches your style, budget, and dreams for the perfect stay.
-    
-    This tool searches through Google's comprehensive hotel database, including major chains, boutique properties, and vacation rentals worldwide.
-    
-    Args:
-        location: Your destination (e.g., 'Paris city center', 'Bali beachfront', 'Tokyo Shibuya')
-        check_in_date: When you'd like to arrive (YYYY-MM-DD format, e.g., '2025-06-15')
-        check_out_date: When you're planning to leave (YYYY-MM-DD format, e.g., '2025-06-20')
-        adults: Number of adult guests sharing the space
-        children: Number of children (if traveling with family)
-        children_ages: Ages of children for appropriate room configurations
-        currency: Your preferred currency for pricing (default: USD)
-        country: Your country for localized results and offers
-        language: Your preferred language
-        sort_by: How you'd like results sorted (3=Best deals, 8=Highest rated, 13=Most popular)
-        hotel_class: Star rating preference (e.g., [4, 5] for luxury properties)
-        amenities: Must-have amenities for your perfect stay
-        property_types: Type of accommodation you prefer
-        brands: Favorite hotel brands or chains
-        free_cancellation: True if you need booking flexibility
-        special_offers: True to see exclusive deals and packages
-        vacation_rentals: True to search apartments, villas, and unique stays
-        bedrooms: Minimum bedrooms needed (for vacation rentals)
-        max_results: Maximum number of options to show you
-        
-    Returns:
-        Curated accommodation options with detailed information, pricing, and booking details
-    """
+    """Searches Google Hotels for accommodation options. Takes destination, check-in date, check-out date, guest count, sort preference, and optional filters (amenities, price range, star rating). Returns available hotels with prices, ratings, reviews, and booking links."""
     
     try:
         # Build search parameters (client adds engine and api_key)
@@ -394,20 +323,7 @@ def search_hotels_amadeus_by_city(
     ratings: str = None,
     hotelSource: str = None
 ) -> str:
-    """
-    🏨 Discover professional hotel listings using Amadeus! Find accommodations that match your style, budget, and preferences using the same system travel professionals use.
-
-    This tool provides access to Amadeus's comprehensive hotel database with detailed property information and professional booking capabilities.
-
-    Args:
-        cityCode: IATA code of the city (e.g., PAR for Paris, NYC for New York)
-        radius: Search radius from city center (default depends on city size)
-        radiusUnit: Unit for radius (KM for kilometers, MI for miles)
-        chainCodes: Comma-separated hotel chain codes (e.g., MC,RT,EZ)
-        amenities: Comma-separated amenity codes (e.g., SPA,WIFI,POOL)
-        ratings: Comma-separated hotel ratings (1,2,3,4,5)
-        hotelSource: Source of hotel content (ALL, BEDBANK, etc.)
-    """
+    """Searches Amadeus hotel inventory by city code (IATA). Takes city code, optional radius, hotel chain filters, amenities, ratings, and content source. Returns hotel availability with rates, room types, and cancellation policies."""
     amadeus_client = ctx.request_context.lifespan_context.amadeus_client
     params = build_optional_params(
         required_params={"cityCode": cityCode},
@@ -449,19 +365,7 @@ def search_hotels_amadeus_geocode(
     ratings: str = None,
     hotelSource: str = None
 ) -> str:
-    """
-    🎯 Find hotels near any specific location with pinpoint accuracy using Amadeus! Perfect for finding accommodations near landmarks, airports, business districts, or any precise location.
-
-    Args:
-        latitude: Latitude of the location (e.g., 48.8566 for Paris)
-        longitude: Longitude of the location (e.g., 2.3522 for Paris)
-        radius: Search radius from coordinates (default depends on area)
-        radiusUnit: Unit for radius (KM for kilometers, MI for miles)
-        chainCodes: Comma-separated hotel chain codes (e.g., MC,RT,EZ)
-        amenities: Comma-separated amenity codes (e.g., SPA,WIFI,POOL)
-        ratings: Comma-separated hotel ratings (1,2,3,4,5)
-        hotelSource: Source of hotel content (ALL, BEDBANK, etc.)
-    """
+    """Searches for hotels near specific coordinates using Amadeus API. Takes latitude, longitude, optional search radius with unit (KM or MI), hotel chain filters, amenity requirements (e.g., SPA, WIFI, POOL), star ratings (1-5), and content source. Returns available hotels sorted by distance with rates, amenities, and booking links."""
     amadeus_client = ctx.request_context.lifespan_context.amadeus_client
     params = build_optional_params(
         required_params={"latitude": latitude, "longitude": longitude},
@@ -510,26 +414,7 @@ def search_hotel_offers_amadeus(
     sort: str = None,
     lang: str = None
 ) -> str:
-    """
-    💰 Find the best hotel deals with real-time pricing and availability using Amadeus! Search for actual bookable rates and room availability for your exact travel dates.
-
-    Args:
-        cityCode: IATA code of the city (e.g., PAR for Paris) - required if hotelIds not provided
-        hotelIds: Comma-separated list of hotel IDs - required if cityCode not provided
-        checkInDate: Check-in date in YYYY-MM-DD format
-        checkOutDate: Check-out date in YYYY-MM-DD format  
-        adults: Number of adult guests (default: 1)
-        roomQuantity: Number of rooms requested (default: 1)
-        priceRange: Price range filter (e.g., 50-200)
-        currency: Currency code for prices (e.g., USD, EUR)
-        paymentPolicy: Payment policy (GUARANTEE, DEPOSIT, NONE)
-        boardType: Board type (ROOM_ONLY, BREAKFAST, HALF_BOARD, FULL_BOARD, ALL_INCLUSIVE)
-        includeClosed: Include temporarily closed hotels (true/false)
-        bestRateOnly: Return only the best rate per hotel (true/false)
-        view: Response view (FULL, LIGHT)
-        sort: Sort order (PRICE, NONE)
-        lang: Language code for descriptions (e.g., EN, FR)
-    """
+    """Retrieves real-time hotel booking offers from Amadeus. Takes city code or hotel IDs, check-in/out dates, guest count, optional filters (price range, board type, payment policy), currency, and sorting. Returns available room offers with rates, meal plans, and cancellation policies."""
     if not cityCode and not hotelIds:
         return format_error_response("Either cityCode or hotelIds must be provided")
 
@@ -585,23 +470,7 @@ def search_events_serpapi(
     country: str = "us",
     max_results: int = 20
 ) -> Dict[str, Any]:
-    """
-    🎭 Discover amazing experiences and events using Google Events! Your AI travel concierge will find the perfect activities, shows, festivals, and cultural experiences to enrich your journey.
-    
-    Whether you're seeking Broadway shows, local festivals, art exhibitions, concerts, food events, or unique cultural experiences, I'll uncover the best events happening during your visit.
-    
-    Args:
-        query: What type of experiences you're seeking (e.g., "concerts", "food festivals", "art galleries", "theater")
-        location: Where you'll be exploring (e.g., "Manhattan NYC", "Paris Marais", "Tokyo Shibuya")
-        date_filter: When you want to experience events (today, tomorrow, week, weekend, next_week, month, next_month)
-        event_type: Type of experience (Virtual-Event for online events you can enjoy from anywhere)
-        language: Your preferred language for event information
-        country: Your country for localized event discovery
-        max_results: Maximum number of amazing events to show you
-        
-    Returns:
-        Curated list of exciting events and experiences with details, timing, and booking information
-    """
+    """Searches Google Events for local festivals, shows, and experiences. Takes search query (e.g., concerts, festivals), location, optional date filter, event type, language, and country. Returns curated events with dates, times, locations, descriptions, and booking information."""
     
     try:
         # Build search query
@@ -656,20 +525,7 @@ def search_activities_amadeus(
     radius: int = None,
     radiusUnit: str = "KM"
 ) -> str:
-    """
-    🎭 Discover amazing tours and activities using Amadeus! Find tours, attractions, and unique experiences to make your trip unforgettable.
-
-    This tool provides access to Amadeus's curated activity database with professional tour operators and verified experiences.
-
-    Args:
-        latitude: Location latitude (e.g., 48.8566 for Paris center)
-        longitude: Location longitude (e.g., 2.3522 for Paris center)
-        radius: Search area radius (default: 1km for city centers, increase for wider searches)
-        radiusUnit: Distance unit ('KM' for kilometers, 'MI' for miles)
-        
-    Returns:
-        Curated list of tours, activities, and experiences with descriptions and booking information
-    """
+    """Searches Amadeus activity database by location. Takes latitude, longitude, optional radius, activity categories, and language preference. Returns activities with descriptions, pricing, duration, booking requirements, and user ratings."""
     amadeus_client = ctx.request_context.lifespan_context.amadeus_client
     params = {
         "latitude": latitude,
@@ -703,15 +559,7 @@ def get_activity_details_amadeus(
     activityId: str,
     ctx: Context
 ) -> str:
-    """
-    🎆 Get complete details about a specific activity using Amadeus! Perfect for when you've found something interesting and want full information before booking.
-
-    Args:
-        activityId: The unique ID of the activity you're interested in
-        
-    Returns:
-        Complete activity details with schedules, pricing, requirements, and booking information
-    """
+    """Retrieves complete activity details from Amadeus. Takes activity ID and returns full information including schedules, pricing, age/health requirements, cancellation policies, and direct booking links."""
     amadeus_client = ctx.request_context.lifespan_context.amadeus_client
     
     try:
@@ -745,20 +593,7 @@ def geocode_location(
     addressdetails: bool = True,
     country_codes: Optional[str] = None
 ) -> Dict[str, Any]:
-    """
-    🌍 Pinpoint any destination on Earth with precision! Convert any location name, address, or landmark into exact coordinates for perfect trip planning.
-    
-    Args:
-        location: Any place you want to locate (e.g., "Eiffel Tower", "Times Square NYC", "Santorini Greece")
-        exactly_one: True for the best match, False to see multiple location options
-        timeout: How long to search for the location (in seconds)
-        language: Your preferred language for location details
-        addressdetails: True to get complete address breakdown and local information
-        country_codes: Limit search to specific countries (e.g., "us,ca" for US and Canada only)
-        
-    Returns:
-        Precise coordinates and comprehensive location details for your travel planning
-    """
+    """Converts location names to geographic coordinates. Takes location query and optional language/country filters. Returns top matches with latitude, longitude, timezone, country, and admin regions for disambiguation."""
     
     try:
         geocode, _ = get_geolocator()
@@ -827,7 +662,7 @@ def calculate_distance(
     unit: str = "km"
 ) -> Dict[str, Any]:
     """
-    📏 Measure distances between any two places on Earth! Perfect for planning travel routes and optimizing your itinerary.
+    Measures distances between any two places on Earth. Perfect for planning travel routes and optimizing your itinerary.
     
     Args:
         lat1: Latitude of your first location
@@ -877,169 +712,6 @@ def calculate_distance(
     except Exception as e:
         return {"error": f"Distance calculation error: {str(e)}"}
 
-# =====================================================================
-# WEATHER TOOLS
-# =====================================================================
-
-OPEN_METEO_BASE_URL = "https://api.open-meteo.com/v1/forecast"
-
-@mcp.tool()
-def get_current_conditions(latitude: float, longitude: float) -> Dict[str, Any]:
-    """
-    🌤️ Get real-time weather conditions for your destination using Open-Meteo.
-    
-    Args:
-        latitude: Latitude of your destination
-        longitude: Longitude of your destination
-        
-    Returns:
-        Current weather with temperature, wind, and conditions
-    """
-    try:
-        params = {
-            "latitude": latitude,
-            "longitude": longitude,
-            "current_weather": "true",
-            "timezone": "auto",
-        }
-        response = requests.get(OPEN_METEO_BASE_URL, params=params, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-
-        current = data.get("current_weather") or data.get("current")
-        if not current:
-            return {"error": "Current weather not available"}
-
-        result = {
-            "coordinates": {"latitude": latitude, "longitude": longitude},
-            "provider": "open-meteo",
-            "current_conditions": {
-                "timestamp": current.get("time"),
-                "temperature_c": current.get("temperature"),
-                "windspeed_kph": current.get("windspeed"),
-                "winddirection_deg": current.get("winddirection"),
-                "is_day": current.get("is_day"),
-                "weathercode": current.get("weathercode"),
-            },
-            "search_timestamp": datetime.now().isoformat(),
-        }
-        return result
-    except requests.exceptions.RequestException as e:
-        return {"error": f"Weather API request failed: {str(e)}"}
-    except Exception as e:
-        return {"error": f"Error processing weather data: {str(e)}"}
-
-@mcp.tool()
-def get_weather_forecast(latitude: float, longitude: float, hourly: bool = False) -> Dict[str, Any]:
-    """
-    🌦️ Plan your trip with detailed weather forecasts using Open-Meteo.
-    
-    Args:
-        latitude: Latitude of your destination
-        longitude: Longitude of your destination
-        hourly: True for hourly forecast, False for daily summary
-    """
-    try:
-        params = {
-            "latitude": latitude,
-            "longitude": longitude,
-            "timezone": "auto",
-        }
-        if hourly:
-            params["hourly"] = ",".join([
-                "temperature_2m",
-                "relative_humidity_2m",
-                "apparent_temperature",
-                "precipitation_probability",
-                "windspeed_10m",
-                "winddirection_10m",
-                "weathercode",
-            ])
-        else:
-            params["daily"] = ",".join([
-                "temperature_2m_max",
-                "temperature_2m_min",
-                "precipitation_sum",
-                "sunrise",
-                "sunset",
-                "uv_index_max",
-            ])
-
-        response = requests.get(OPEN_METEO_BASE_URL, params=params, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-
-        result_periods: List[Dict[str, Any]] = []
-        if hourly:
-            hourly_data = data.get("hourly", {})
-            times = hourly_data.get("time", [])
-
-            # Pre-extract all arrays once (O(1) per array)
-            temps = hourly_data.get("temperature_2m", [])
-            humidities = hourly_data.get("relative_humidity_2m", [])
-            apparent_temps = hourly_data.get("apparent_temperature", [])
-            precip_probs = hourly_data.get("precipitation_probability", [])
-            windspeeds = hourly_data.get("windspeed_10m", [])
-            winddir = hourly_data.get("winddirection_10m", [])
-            weathercodes = hourly_data.get("weathercode", [])
-
-            # Parallel iteration with zip (O(n) total, not O(n*m))
-            for t, temp, humidity, apparent_temp, precip_prob, windspeed, wind_direction, weathercode in zip(
-                times, temps, humidities, apparent_temps, precip_probs, windspeeds, winddir, weathercodes
-            ):
-                result_periods.append({
-                    "time": t,
-                    "temperature_c": temp,
-                    "relative_humidity": humidity,
-                    "apparent_temperature_c": apparent_temp,
-                    "precipitation_probability": precip_prob,
-                    "windspeed_10m": windspeed,
-                    "winddirection_10m": wind_direction,
-                    "weathercode": weathercode,
-                })
-            units = data.get("hourly_units", {})
-            forecast_meta = {"units": units}
-        else:
-            daily_data = data.get("daily", {})
-            times = daily_data.get("time", [])
-
-            # Pre-extract all arrays once (O(1) per array)
-            temp_maxes = daily_data.get("temperature_2m_max", [])
-            temp_mins = daily_data.get("temperature_2m_min", [])
-            precip_sums = daily_data.get("precipitation_sum", [])
-            sunrises = daily_data.get("sunrise", [])
-            sunsets = daily_data.get("sunset", [])
-            uv_indices = daily_data.get("uv_index_max", [])
-
-            # Parallel iteration with zip (O(n) total, not O(n*m))
-            for t, temp_max, temp_min, precip_sum, sunrise, sunset, uv_index in zip(
-                times, temp_maxes, temp_mins, precip_sums, sunrises, sunsets, uv_indices
-            ):
-                result_periods.append({
-                    "date": t,
-                    "temp_max_c": temp_max,
-                    "temp_min_c": temp_min,
-                    "precipitation_sum_mm": precip_sum,
-                    "sunrise": sunrise,
-                    "sunset": sunset,
-                    "uv_index_max": uv_index,
-                })
-            units = data.get("daily_units", {})
-            forecast_meta = {"units": units}
-
-        result = {
-            "coordinates": {"latitude": latitude, "longitude": longitude},
-            "provider": "open-meteo",
-            "forecast_type": "hourly" if hourly else "daily",
-            "forecast_periods": result_periods,
-            "forecast_metadata": forecast_meta,
-            "search_timestamp": datetime.now().isoformat(),
-        }
-        return result
-    except requests.exceptions.RequestException as e:
-        return {"error": f"Weather API request failed: {str(e)}"}
-    except Exception as e:
-        return {"error": f"Error processing forecast data: {str(e)}"}
 
 # =====================================================================
 # FINANCIAL TOOLS
@@ -1053,7 +725,7 @@ def convert_currency(
     language: str = "en"
 ) -> Dict[str, Any]:
     """
-    💱 Real-time currency conversion using ExchangeRate-API.
+    Gets conversion rates based on real-time real time data using ExchangeRate-API.
     
     Args:
         from_currency: Source currency code (e.g., 'USD')
@@ -1098,66 +770,6 @@ def convert_currency(
     except Exception as e:
         return {"error": f"Unexpected error: {str(e)}"}
 
-@mcp.tool()
-def lookup_stock(
-    symbol: str,
-    exchange: Optional[str] = None,
-    window: Optional[str] = None,
-    language: str = "en"
-) -> Dict[str, Any]:
-    """
-    📈 Track travel investments and monitor travel-related stocks! Stay informed about airline stocks, hotel chains, travel companies, and tourism-related investments.
-    
-    Args:
-        symbol: Stock symbol of travel companies (e.g., 'DAL' for Delta, 'MAR' for Marriott, 'BKNG' for Booking Holdings)
-        exchange: Stock exchange if specific (e.g., 'NASDAQ', 'NYSE', 'LSE')
-        window: Historical data timeframe ('1D', '5D', '1M', '6M', '1Y', '5Y', 'MAX')
-        language: Your preferred language for financial information
-        
-    Returns:
-        Comprehensive stock analysis with pricing, trends, and investment insights
-    """
-    
-    try:
-        # Format query
-        query = symbol.upper()
-        if exchange:
-            query = f"{symbol.upper()}:{exchange.upper()}"
-
-        # Build search parameters (client adds engine and api_key)
-        params = {
-            "q": query,
-            "hl": language,
-        }
-
-        if window:
-            params["window"] = window
-
-        # Make API request (client handles engine, api_key, timeout)
-        finance_data = serpapi_client.lookup_stock(**params)
-
-        # Process results
-        processed_results = {
-            "provider": "Google Finance (SerpAPI)",
-            "search_metadata": {
-                "symbol": symbol.upper(),
-                "exchange": exchange,
-                "window": window,
-                "language": language,
-                "search_timestamp": datetime.now().isoformat()
-            },
-            "stock_info": finance_data.get("summary", {}),
-            "price_movement": finance_data.get("price_movement", {}),
-            "historical_data": finance_data.get("historical_data", []),
-            "news": finance_data.get("news", [])
-        }
-
-        return processed_results
-
-    except ValueError as e:
-        return format_error_response(str(e))
-    except Exception as e:
-        return format_error_response(f"Google Finance API error: {str(e)}")
 
 # =====================================================================
 # UNIFIED PROMPTS
@@ -1173,7 +785,7 @@ def travel_planning_prompt(
     interests: str = "",
     travel_style: str = ""
 ) -> str:
-    """🌟 Your Complete Combined AI Travel Concierge - Trip Planning Assistant"""
+    """Generates comprehensive AI travel planning guidance combining flight booking, hotel searches, activities, and itinerary optimization. Provides personalized recommendations based on budget, duration, interests, and travel constraints."""
     
     prompt = f"""🌟 **WELCOME TO YOUR COMBINED TRAVEL CONCIERGE SERVICE** 🌟
 
@@ -1198,7 +810,7 @@ I'm your comprehensive AI travel specialist with access to BOTH Google Travel Se
     
     prompt += f"""
 
-🎪 **YOUR COMPLETE DUAL-POWERED TRAVEL EXPERIENCE:**
+**YOUR COMPLETE DUAL-POWERED TRAVEL EXPERIENCE:**
 
 ✈️ **PHASE 1: Flight Discovery & Comparison**
    🌐 **Google Flights Search** - Use search_flights_serpapi() for comprehensive consumer flight options
@@ -1231,7 +843,7 @@ I'm your comprehensive AI travel specialist with access to BOTH Google Travel Se
    • Use get_current_conditions() for real-time weather updates
    • Plan activities around optimal weather windows
 
-💰 **PHASE 6: Financial Planning & Currency Strategy**
+**PHASE 6: Financial Planning & Currency Strategy**
    • Use convert_currency() for accurate budget planning and expense tracking
    • Use lookup_stock() to monitor travel industry investments if relevant
    • Track exchange rates and optimize currency conversion timing
@@ -1241,22 +853,22 @@ Present everything as your expert travel friend who has access to BOTH consumer 
 
 **AVAILABLE DUAL-PLATFORM TOOLS:**
 
-**✈️ FLIGHT SEARCH:**
+**FLIGHT SEARCH:**
 - 🌐 search_flights_serpapi() - Google Flights consumer search
 - 🏢 search_flights_amadeus() - Amadeus professional GDS search
 
-**🏨 HOTEL SEARCH:**
+**HOTEL SEARCH:**
 - 🌐 search_hotels_serpapi() - Google Hotels consumer search
 - 🏢 search_hotels_amadeus_by_city() - Amadeus professional city search
 - 🏢 search_hotels_amadeus_by_geocode() - Amadeus professional coordinate search
 - 🏢 search_hotel_offers_amadeus() - Amadeus real-time offers and availability
 
-**🎭 EVENTS & ACTIVITIES:**
+**EVENTS & ACTIVITIES:**
 - 🌐 search_events_serpapi() - Google Events consumer search
 - 🏢 search_tours_activities_amadeus() - Amadeus professional activities
 - 🏢 get_activity_details_amadeus() - Detailed activity information
 
-**🌍 LOCATION & UTILITIES:**
+**LOCATION & UTILITIES:**
 - geocode_location() - Precise location finding
 - calculate_distance() - Route optimization
 - get_weather_forecast() - Weather planning
@@ -1270,16 +882,16 @@ Let's create your perfect travel experience using BOTH consumer and professional
 
 @mcp.resource("travel://combined/capabilities")
 def combined_travel_server_capabilities() -> str:
-    """🌟 Complete Guide to Your Combined Travel Concierge Server Capabilities"""
+    """Complete Guide to Your Combined Travel Concierge Server Capabilities"""
     
-    return """# 🌟 Combined Travel Concierge Server - Complete Capabilities Guide
+    return """# Combined Travel Concierge Server - Complete Capabilities Guide
 
 ## Overview
 This combined server integrates the best of both consumer travel platforms (Google via SerpAPI) AND professional travel industry systems (Amadeus GDS) into one powerful platform, providing unparalleled travel planning assistance.
 
-## ✈️ Dual Flight Search Services
+## Dual Flight Search Services
 
-### 🌐 Consumer Flight Search (Google Flights via SerpAPI)
+### Consumer Flight Search (Google Flights via SerpAPI)
 **Tool:** `search_flights_serpapi()`
 - Access Google's comprehensive flight database
 - Consumer-friendly pricing and schedule display
@@ -1287,7 +899,7 @@ This combined server integrates the best of both consumer travel platforms (Goog
 - Multi-airline comparison with popular routes
 - Family-friendly search with children and infant options
 
-### 🏢 Professional Flight Search (Amadeus GDS)
+### Professional Flight Search (Amadeus GDS)
 **Tool:** `search_flights_amadeus()`
 - Professional travel agent inventory access
 - Real-time airline seat availability
@@ -1301,9 +913,9 @@ This combined server integrates the best of both consumer travel platforms (Goog
 - Get comprehensive view of all available options
 - Professional insights with consumer-friendly presentation
 
-## 🏨 Comprehensive Hotel Services
+## Comprehensive Hotel Services
 
-### 🌐 Consumer Hotel Search (Google Hotels via SerpAPI)
+### Consumer Hotel Search (Google Hotels via SerpAPI)
 **Tool:** `search_hotels_serpapi()`
 - Vacation rentals, boutique hotels, major chains
 - Consumer reviews and ratings
@@ -1311,7 +923,7 @@ This combined server integrates the best of both consumer travel platforms (Goog
 - Family-friendly filtering with children's ages
 - Flexible cancellation and booking options
 
-### 🏢 Professional Hotel Search (Amadeus GDS)
+### Professional Hotel Search (Amadeus GDS)
 **Tools:** 
 - `search_hotels_amadeus_by_city()` - City-based professional search
 - `search_hotels_amadeus_by_geocode()` - Coordinate-based search
@@ -1326,14 +938,14 @@ This combined server integrates the best of both consumer travel platforms (Goog
 
 ## 🎭 Dual Event & Activity Discovery
 
-### 🌐 Consumer Events (Google Events via SerpAPI)
+### Consumer Events (Google Events via SerpAPI)
 **Tool:** `search_events_serpapi()`
 - Local festivals, concerts, exhibitions
 - Consumer-friendly event discovery
 - Popular attractions and entertainment
 - Virtual events and online experiences
 
-### 🏢 Professional Activities (Amadeus GDS)
+### Professional Activities (Amadeus GDS)
 **Tools:**
 - `search_tours_activities_amadeus()` - Professional tour operations
 - `get_activity_details_amadeus()` - Detailed activity information
@@ -1344,7 +956,7 @@ This combined server integrates the best of both consumer travel platforms (Goog
 - Verified experience providers
 - Detailed scheduling and requirements
 
-## 🌍 Location Intelligence Services
+## Location Intelligence Services
 **Tools Available:**
 - `geocode_location()` - Convert addresses/places to coordinates
 - `calculate_distance()` - Measure distances between locations
@@ -1355,7 +967,7 @@ This combined server integrates the best of both consumer travel platforms (Goog
 - Multi-language location details
 - Address detail breakdown
 
-## 🌦️ Weather Intelligence Service
+## Weather Intelligence Service
 **Tools Available:**
 - `get_weather_forecast()` - Detailed weather forecasts
 - `get_current_conditions()` - Real-time weather data
@@ -1366,10 +978,9 @@ This combined server integrates the best of both consumer travel platforms (Goog
 - Activity planning based on weather conditions
 - Travel safety considerations
 
-## 💰 Financial Services
+## Financial Services
 **Tools Available:**
 - `convert_currency()` - Real-time currency conversion via ExchangeRate-API
-- `lookup_stock()` - Travel industry stock monitoring via Google Finance
 
 **Capabilities:**
 - Real-time exchange rates for international travel
@@ -1377,7 +988,7 @@ This combined server integrates the best of both consumer travel platforms (Goog
 - Budget planning assistance across currencies
 - Financial market insights for travel investments
 
-## 🎯 Unified Planning Advantages
+## Unified Planning Advantages
 
 **Dual Platform Benefits:**
 - **Best Price Discovery**: Compare consumer vs. professional rates
@@ -1392,7 +1003,7 @@ This combined server integrates the best of both consumer travel platforms (Goog
 - Unified error handling and comprehensive reporting
 - Consistent API responses across all services
 
-## 🔧 Technical Specifications
+## Technical Specifications
 
 **Required Environment Variables:**
 - `SERPAPI_KEY` - Required for Google Flights, Hotels, Events, and Finance services
