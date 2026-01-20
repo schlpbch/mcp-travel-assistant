@@ -1,6 +1,6 @@
 [project]
 name = "travel-assistant"
-version = "2.2.0"
+version = "2.3.0"
 description = "Unified MCP server providing comprehensive travel planning services"
 
 readme = "README.md"
