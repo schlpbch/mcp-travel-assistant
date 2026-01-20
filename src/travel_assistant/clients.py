@@ -229,6 +229,93 @@ class ExchangeRateClient:
 
 
 # =====================================================================
+# OPEN-METEO CLIENT (WEATHER)
+# =====================================================================
+
+class OpenMeteoClient:
+    """Client for weather data via Open-Meteo API."""
+
+    def __init__(self):
+        self.base_url = "https://api.open-meteo.com/v1/forecast"
+
+    def get_forecast(
+        self, latitude: float, longitude: float, hourly: bool = False
+    ) -> Dict[str, Any]:
+        """Get weather forecast for a location."""
+        try:
+            params = {
+                "latitude": latitude,
+                "longitude": longitude,
+                "timezone": "auto",
+            }
+
+            if hourly:
+                params["hourly"] = ",".join([
+                    "temperature_2m",
+                    "relative_humidity_2m",
+                    "apparent_temperature",
+                    "precipitation_probability",
+                    "windspeed_10m",
+                    "winddirection_10m",
+                    "weathercode",
+                ])
+            else:
+                params["daily"] = ",".join([
+                    "temperature_2m_max",
+                    "temperature_2m_min",
+                    "precipitation_sum",
+                    "sunrise",
+                    "sunset",
+                    "uv_index_max",
+                ])
+
+            response = requests.get(self.base_url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+
+            return {
+                "coordinates": {"latitude": latitude, "longitude": longitude},
+                "provider": "open-meteo",
+                "forecast_type": "hourly" if hourly else "daily",
+                "data": data,
+                "search_timestamp": datetime.now().isoformat(),
+            }
+        except requests.exceptions.RequestException as e:
+            return {"error": f"Weather API request failed: {str(e)}"}
+        except Exception as e:
+            return {"error": f"Error processing weather data: {str(e)}"}
+
+    def get_current_conditions(self, latitude: float, longitude: float) -> Dict[str, Any]:
+        """Get current weather conditions for a location."""
+        try:
+            params = {
+                "latitude": latitude,
+                "longitude": longitude,
+                "current_weather": "true",
+                "timezone": "auto",
+            }
+
+            response = requests.get(self.base_url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+
+            current = data.get("current_weather") or data.get("current")
+            if not current:
+                return {"error": "Current weather not available"}
+
+            return {
+                "coordinates": {"latitude": latitude, "longitude": longitude},
+                "provider": "open-meteo",
+                "current_conditions": current,
+                "search_timestamp": datetime.now().isoformat(),
+            }
+        except requests.exceptions.RequestException as e:
+            return {"error": f"Weather API request failed: {str(e)}"}
+        except Exception as e:
+            return {"error": f"Error processing weather data: {str(e)}"}
+
+
+# =====================================================================
 # NOMINATIM GEOCODING CLIENT
 # =====================================================================
 

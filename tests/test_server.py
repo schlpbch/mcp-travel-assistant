@@ -153,6 +153,13 @@ class TestClientIntegration:
         assert client is not None
         assert client.api_key is not None
 
+    def test_open_meteo_client_creatable(self):
+        """Test that OpenMeteo client can be instantiated."""
+        from travel_assistant.clients import OpenMeteoClient
+
+        client = OpenMeteoClient()
+        assert client is not None
+
     def test_geocoding_client_creatable(self):
         """Test that Geocoding client can be instantiated."""
         from travel_assistant.clients import GeocodingClient
