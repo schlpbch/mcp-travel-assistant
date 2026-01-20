@@ -1,4 +1,5 @@
 """Tests for travel_assistant.models module."""
+
 import pytest
 from datetime import datetime, timedelta
 from pydantic import ValidationError
@@ -18,7 +19,6 @@ from travel_assistant.models import (
     WeatherForecast,
     CurrencyParams,
     CurrencyConversion,
-    StockParams,
     APIResponse,
     ErrorResponse,
 )
@@ -461,34 +461,6 @@ class TestCurrencyConversion:
         assert conversion.from_currency == "USD"
         assert conversion.exchange_rate == 0.92
         assert conversion.converted_amount == 92.0
-
-
-class TestStockParams:
-    """Test StockParams Pydantic model."""
-
-    def test_valid_stock_params_minimal(self):
-        """Test creating StockParams with minimal fields."""
-        params = StockParams(symbol="DAL")
-        assert params.symbol == "DAL"
-
-    def test_stock_params_default_values(self):
-        """Test default values are applied correctly."""
-        params = StockParams(symbol="MAR")
-        assert params.language == "en"
-        assert params.exchange is None
-        assert params.window is None
-
-    def test_stock_params_with_all_fields(self):
-        """Test StockParams with all fields."""
-        params = StockParams(
-            symbol="TSLA",
-            exchange="NASDAQ",
-            window="1Y",
-            language="fr",
-        )
-        assert params.symbol == "TSLA"
-        assert params.exchange == "NASDAQ"
-        assert params.window == "1Y"
 
 
 class TestAPIResponse:

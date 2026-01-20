@@ -168,27 +168,6 @@ class TestSerpAPIClient:
 
         assert "events" in result
 
-    @responses.activate
-    def test_lookup_stock_success(self):
-        """Test successful stock lookup via SerpAPI."""
-        mock_response = {
-            "stocks": [
-                {"symbol": "DAL", "price": 45.50, "change": 0.75}
-            ]
-        }
-
-        responses.add(
-            responses.GET,
-            "https://serpapi.com/search",
-            json=mock_response,
-            status=200,
-        )
-
-        client = SerpAPIClient()
-        result = client.lookup_stock(symbol="DAL")
-
-        assert "stocks" in result
-
 
 # =====================================================================
 # AMADEUS CLIENT WRAPPER TESTS

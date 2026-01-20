@@ -50,7 +50,6 @@ Get the **best of both worlds**: consumer accessibility with professional depth!
 - **Geocoding & Distance Calculation**: Precise location services
 - **Weather Intelligence**: Real-time conditions and forecasts
 - **Currency Conversion**: Live exchange rates
-- **Financial Tracking**: Travel industry stock monitoring
 
 ## 🛠️ Installation & Setup
 
@@ -202,7 +201,6 @@ Then run the server with: `python travel_server.py --transport http --port 8000`
 | `get_weather_forecast()`   | Open-Meteo       | Weather forecasts for travel planning |
 | `get_current_conditions()` | Open-Meteo       | Real-time weather conditions          |
 | `convert_currency()`       | ExchangeRate-API | Live currency conversion              |
-| `lookup_stock()`           | Google Finance   | Travel industry stock tracking        |
 
 ## 🎨 Usage Examples
 

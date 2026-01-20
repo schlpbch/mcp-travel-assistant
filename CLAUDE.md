@@ -45,7 +45,6 @@ Contains:
   - 🎭 Events: `search_events_serpapi`, `search_activities_amadeus`, `get_activity_details_amadeus`
   - 🌍 Geocoding: `geocode_location`, `calculate_distance`
   - 🌦️ Weather: `get_current_conditions`, `get_weather_forecast`
-  - 💰 Finance: `convert_currency`, `lookup_stock`
 - **1 MCP Prompt** - `travel_planning_prompt()` with structured planning guidance
 - **1 MCP Resource** - `combined_travel_server_capabilities()` with detailed documentation
 
@@ -362,7 +361,7 @@ uv run pytest tests/ -v -s
 - Type validation (latitude/longitude bounds, currency amounts)
 
 **3. test_clients.py** - API client mocking
-- **SerpAPIClient**: Flight/hotel/event/stock searches with HTTP error handling
+- **SerpAPIClient**: Flight/hotel/event searches with HTTP error handling
 - **AmadeusClientWrapper**: Flight/hotel searches with parameter validation
 - **ExchangeRateClient**: Currency conversion with API error handling
 - **GeocodingClient**: Geocoding and reverse geocoding with mocking
