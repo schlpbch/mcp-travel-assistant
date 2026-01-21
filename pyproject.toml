@@ -54,6 +54,7 @@ dev = [
     # "ruff>=0.1.0",  # TODO: Properly configure ruff formatter post-MVP
     "mypy>=1.5.0",
     "types-requests>=2.31.0",
+    "ruff>=0.14.13",
 ]
 
 # [tool.ruff]  # TODO: Configure and enable ruff post-MVP

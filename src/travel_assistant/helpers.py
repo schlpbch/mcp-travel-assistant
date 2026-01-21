@@ -10,7 +10,7 @@ from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
 
 # Re-export accessibility functions
-from mcp_accessibility_models import (
+from mcp_accessibility_models import (  # noqa: F401
     extract_amadeus_hotel_accessibility,
     extract_flight_accessibility_from_amadeus,
     extract_hotel_accessibility,

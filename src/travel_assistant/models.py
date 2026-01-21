@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, field_validator
 from travel_assistant.helpers import validate_currency_code, validate_date_format
 
 # Re-export accessibility models
-from mcp_accessibility_models import (
+from mcp_accessibility_models import (  # noqa: F401
     AccessibilityRequest,
     FlightAccessibility,
     HotelAccessibility,

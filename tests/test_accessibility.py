@@ -127,9 +127,9 @@ class TestAmadeusHotelAccessibilityExtraction:
                 "facilities": [{"description": f"Feature with {keyword} available"}]
             }
             accessibility = extract_amadeus_hotel_accessibility(hotel_data)
-            assert accessibility["wheelchair_accessible"] is True, (
-                f"Failed for keyword: {keyword}"
-            )
+            assert (
+                accessibility["wheelchair_accessible"] is True
+            ), f"Failed for keyword: {keyword}"
 
     def test_extract_amadeus_case_insensitive(self):
         """Test that accessibility keyword matching is case-insensitive."""
@@ -287,7 +287,8 @@ class TestAccessibilityScenarios:
 
     def test_deaf_traveler_flight_search_scenario(self):
         """Test flight accessibility info for deaf traveler."""
-        request = AccessibilityRequest(
+        # Test AccessibilityRequest creation
+        AccessibilityRequest(
             deaf=True,
             special_requirements="Needs visual alerts, no audio announcements",
         )
@@ -326,7 +327,8 @@ class TestAccessibilityDataValidation:
 
     def test_flight_accessibility_schema(self):
         """Test that FlightAccessibility has valid schema."""
-        accessibility = FlightAccessibility(
+        # Test FlightAccessibility creation
+        FlightAccessibility(
             wheelchair_available=True, special_service_codes=["WCHR", "WCHS"]
         )
         # Validate schema
@@ -336,7 +338,8 @@ class TestAccessibilityDataValidation:
 
     def test_hotel_accessibility_schema(self):
         """Test that HotelAccessibility has valid schema."""
-        accessibility = HotelAccessibility(
+        # Test HotelAccessibility creation
+        HotelAccessibility(
             wheelchair_accessible=True,
             facility_list=["Roll-in shower", "Accessible parking"],
         )
@@ -346,7 +349,8 @@ class TestAccessibilityDataValidation:
 
     def test_accessibility_request_schema(self):
         """Test that AccessibilityRequest has valid schema."""
-        request = AccessibilityRequest(wheelchair_user=True, deaf=True)
+        # Test AccessibilityRequest creation
+        AccessibilityRequest(wheelchair_user=True, deaf=True)
         schema = AccessibilityRequest.model_json_schema()
         assert "properties" in schema
         assert "wheelchair_user" in schema["properties"]
