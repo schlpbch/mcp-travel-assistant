@@ -127,9 +127,9 @@ class TestAmadeusHotelAccessibilityExtraction:
                 "facilities": [{"description": f"Feature with {keyword} available"}]
             }
             accessibility = extract_amadeus_hotel_accessibility(hotel_data)
-            assert (
-                accessibility["wheelchair_accessible"] is True
-            ), f"Failed for keyword: {keyword}"
+            assert accessibility["wheelchair_accessible"] is True, (
+                f"Failed for keyword: {keyword}"
+            )
 
     def test_extract_amadeus_case_insensitive(self):
         """Test that accessibility keyword matching is case-insensitive."""
