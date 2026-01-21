@@ -4,13 +4,13 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 import requests
-from amadeus import Client, ResponseError
+from amadeus import Client, ResponseError  # type: ignore
 from dotenv import load_dotenv
 from fastmcp import Context, FastMCP
-from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
+from geopy.exc import GeocoderTimedOut, GeocoderUnavailable  # type: ignore
 
 from travel_assistant.clients import SerpAPIClient
 from travel_assistant.helpers import (
@@ -153,9 +153,7 @@ def search_flights_serpapi(
                 "trip_type": (
                     "Round trip"
                     if trip_type == 1
-                    else "One way"
-                    if trip_type == 2
-                    else "Multi-city"
+                    else "One way" if trip_type == 2 else "Multi-city"
                 ),
                 "passengers": {
                     "adults": adults,
@@ -196,15 +194,15 @@ def search_flights_amadeus(
     departureDate: str,
     adults: int,
     ctx: Context,
-    returnDate: str = None,
-    children: int = None,
-    infants: int = None,
-    travelClass: str = None,
-    includedAirlineCodes: str = None,
-    excludedAirlineCodes: str = None,
-    nonStop: bool = None,
-    currencyCode: str = None,
-    maxPrice: int = None,
+    returnDate: Optional[str] = None,
+    children: Optional[int] = None,
+    infants: Optional[int] = None,
+    travelClass: Optional[str] = None,
+    includedAirlineCodes: Optional[str] = None,
+    excludedAirlineCodes: Optional[str] = None,
+    nonStop: Optional[bool] = None,
+    currencyCode: Optional[str] = None,
+    maxPrice: Optional[int] = None,
     max: int = 250,
 ) -> str:
     """Searches Amadeus Global Distribution System for professional flight offers with carbon emissions data. Takes departure/arrival airport codes (IATA), travel dates, passenger counts, seat classes, airline filters, and optional preferences. Returns curated flight options with pricing, schedules, seat availability, booking confirmation numbers, and per-cabin CO2 emissions."""
@@ -405,12 +403,12 @@ def search_hotels_serpapi(
 def search_hotels_amadeus_by_city(
     cityCode: str,
     ctx: Context,
-    radius: int = None,
-    radiusUnit: str = None,
-    chainCodes: str = None,
-    amenities: str = None,
-    ratings: str = None,
-    hotelSource: str = None,
+    radius: Optional[int] = None,
+    radiusUnit: Optional[str] = None,
+    chainCodes: Optional[str] = None,
+    amenities: Optional[str] = None,
+    ratings: Optional[str] = None,
+    hotelSource: Optional[str] = None,
 ) -> str:
     """Searches Amadeus professional hotel inventory by city IATA code. Takes city code, optional search radius (KM/MI), hotel chain codes, amenities (WiFi, Spa, Pool, etc.), star ratings (1-5), and content source. Returns professional rates, room inventory, cancellation policies, and availability. Use for business travel and professional bookings."""
     amadeus_client = ctx.request_context.lifespan_context.amadeus_client
@@ -448,12 +446,12 @@ def search_hotels_amadeus_geocode(
     latitude: float,
     longitude: float,
     ctx: Context,
-    radius: int = None,
-    radiusUnit: str = None,
-    chainCodes: str = None,
-    amenities: str = None,
-    ratings: str = None,
-    hotelSource: str = None,
+    radius: Optional[int] = None,
+    radiusUnit: Optional[str] = None,
+    chainCodes: Optional[str] = None,
+    amenities: Optional[str] = None,
+    ratings: Optional[str] = None,
+    hotelSource: Optional[str] = None,
 ) -> str:
     """Searches for hotels near specific coordinates using Amadeus API. Takes latitude, longitude, optional search radius with unit (KM or MI), hotel chain filters, amenity requirements (e.g., SPA, WIFI, POOL), star ratings (1-5), and content source. Returns available hotels sorted by distance with rates, amenities, and booking links."""
     amadeus_client = ctx.request_context.lifespan_context.amadeus_client
@@ -491,21 +489,21 @@ def search_hotels_amadeus_geocode(
 @mcp.tool()
 def search_hotel_offers_amadeus(
     ctx: Context,
-    cityCode: str = None,
-    hotelIds: str = None,
-    checkInDate: str = None,
-    checkOutDate: str = None,
+    cityCode: Optional[str] = None,
+    hotelIds: Optional[str] = None,
+    checkInDate: Optional[str] = None,
+    checkOutDate: Optional[str] = None,
     adults: int = 1,
-    roomQuantity: int = None,
-    priceRange: str = None,
-    currency: str = None,
-    paymentPolicy: str = None,
-    boardType: str = None,
-    includeClosed: bool = None,
-    bestRateOnly: bool = None,
-    view: str = None,
-    sort: str = None,
-    lang: str = None,
+    roomQuantity: Optional[int] = None,
+    priceRange: Optional[str] = None,
+    currency: Optional[str] = None,
+    paymentPolicy: Optional[str] = None,
+    boardType: Optional[str] = None,
+    includeClosed: Optional[bool] = None,
+    bestRateOnly: Optional[bool] = None,
+    view: Optional[str] = None,
+    sort: Optional[str] = None,
+    lang: Optional[str] = None,
 ) -> str:
     """Retrieves real-time hotel booking offers from Amadeus. Takes city code or hotel IDs, check-in/out dates, guest count, optional filters (price range, board type, payment policy), currency, and sorting. Returns available room offers with rates, meal plans, and cancellation policies."""
     if not cityCode and not hotelIds:
@@ -618,7 +616,7 @@ def search_activities_amadeus(
     latitude: float,
     longitude: float,
     ctx: Context,
-    radius: int = None,
+    radius: Optional[int] = None,
     radiusUnit: str = "KM",
 ) -> str:
     """Searches Amadeus professional activities and tours by geographic coordinates. Takes latitude, longitude, optional search radius (KM default), returns curated tours and experiences with descriptions, pricing, duration, age/health requirements, cancellation policies, and user ratings. Use for activity planning and booking verified tour operators."""

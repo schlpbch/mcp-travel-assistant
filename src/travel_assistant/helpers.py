@@ -1,13 +1,14 @@
 """Utility functions for the Travel Assistant MCP server."""
 
 import os
+import re
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, Tuple
 
 import requests
-from geopy.extra.rate_limiter import RateLimiter
-from geopy.geocoders import Nominatim
+from geopy.extra.rate_limiter import RateLimiter  # type: ignore
+from geopy.geocoders import Nominatim  # type: ignore
 
 # Re-export accessibility functions
 from mcp_accessibility_models import (  # noqa: F401
@@ -49,7 +50,7 @@ def get_exchange_rate_api_key() -> str:
     return api_key
 
 
-def get_geolocator():
+def get_geolocator() -> Tuple[Any, Any]:
     """Get geolocator with rate limiting (cached across requests)."""
     return _get_or_create_geolocator()
 
@@ -68,7 +69,6 @@ def sanitize_url_for_logging(url: str) -> str:
     Returns:
         Sanitized URL with API keys replaced by [REDACTED]
     """
-    import re
 
     # Pattern 1: Path-based API keys (ExchangeRate-API style: /v6/{hex_key}/)
     url = re.sub(r"/v6/[a-f0-9]+/", "/v6/[REDACTED]/", url)

@@ -2,11 +2,11 @@
 
 import json
 from datetime import datetime
-from typing import Any
+from typing import Any, Dict, Optional
 
 import requests
-from amadeus import Client as AmadeusClient
-from amadeus import ResponseError
+from amadeus import Client as AmadeusClient  # type: ignore
+from amadeus import ResponseError  # type: ignore
 
 from .helpers import (
     get_exchange_rate_api_key,
@@ -22,14 +22,14 @@ from .helpers import (
 class SerpAPIClient:
     """Client for Google Flights, Hotels, Events, and Finance via SerpAPI."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.base_url = "https://serpapi.com/search"
         try:
-            self.api_key = get_serpapi_key()
+            self.api_key: Optional[str] = get_serpapi_key()
         except ValueError:
             self.api_key = None
 
-    def _request(self, params: dict[str, Any]) -> dict[str, Any]:
+    def _request(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Make a request to SerpAPI."""
         if not self.api_key:
             return {"error": "SERPAPI_KEY environment variable not set"}

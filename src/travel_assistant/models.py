@@ -1,15 +1,15 @@
 """Data models for the Travel Assistant MCP server."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
-from amadeus import Client
+from amadeus import Client  # type: ignore
 from pydantic import BaseModel, Field, field_validator
 
 from travel_assistant.helpers import validate_currency_code, validate_date_format
 
 # Re-export accessibility models
-from mcp_accessibility_models import (  # noqa: F401
+from mcp_accessibility_models import (  # noqa: F401 # type: ignore
     AccessibilityRequest,
     FlightAccessibility,
     HotelAccessibility,
@@ -71,14 +71,14 @@ class FlightSearchParams(BaseModel):
 
     @field_validator("outbound_date", "return_date")
     @classmethod
-    def validate_dates(cls, v):
+    def validate_dates(cls, v: Optional[str]) -> Optional[str]:
         if v:
             return validate_date_format(v)
         return v
 
     @field_validator("currency")
     @classmethod
-    def validate_currency(cls, v):
+    def validate_currency(cls, v: str) -> str:
         return validate_currency_code(v)
 
 
