@@ -16,6 +16,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -38,7 +41,37 @@ jobs:
       - name: Run linting
         run: |
           uv run ruff check src/ tests/
-          uv run ruff format --check src/ tests/
+
+      - name: Auto-format code
+        run: |
+          uv run ruff format src/ tests/
+
+      - name: Check for formatting changes
+        id: format-check
+        run: |
+          if [ -n "$(git diff --name-only)" ]; then
+            echo "formatted=true" >> $GITHUB_OUTPUT
+            echo "::notice title=Code Formatting::Files were auto-formatted by ruff"
+            git diff --name-only
+          else
+            echo "formatted=false" >> $GITHUB_OUTPUT
+            echo "No formatting changes needed"
+          fi
+
+      - name: Commit auto-formatting changes
+        if: steps.format-check.outputs.formatted == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "Auto-format code with ruff [skip ci]"
+          git push
+        continue-on-error: true
+
+      - name: Warning for PR formatting
+        if: steps.format-check.outputs.formatted == 'true' && github.event_name == 'pull_request'
+        run: |
+          echo "::warning title=Formatting Required::This PR has formatting issues. Please run 'uv run ruff format src/ tests/' locally and commit the changes."
 
       - name: Run type checking
         run: |

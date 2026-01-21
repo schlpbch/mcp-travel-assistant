@@ -153,7 +153,9 @@ def search_flights_serpapi(
                 "trip_type": (
                     "Round trip"
                     if trip_type == 1
-                    else "One way" if trip_type == 2 else "Multi-city"
+                    else "One way"
+                    if trip_type == 2
+                    else "Multi-city"
                 ),
                 "passengers": {
                     "adults": adults,
