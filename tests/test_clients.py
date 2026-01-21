@@ -1,17 +1,16 @@
 """Tests for travel_assistant.clients module."""
-import pytest
+
 import json
+from unittest.mock import Mock
+
 import responses
-from unittest.mock import Mock, patch
-from datetime import datetime
 
 from travel_assistant.clients import (
-    SerpAPIClient,
     AmadeusClientWrapper,
     ExchangeRateClient,
     GeocodingClient,
+    SerpAPIClient,
 )
-
 
 # =====================================================================
 # SERPAPI CLIENT TESTS
@@ -31,9 +30,7 @@ class TestSerpAPIClient:
     def test_search_flights_success(self):
         """Test successful flight search via SerpAPI."""
         mock_response = {
-            "best_flights": [
-                {"price": 299, "airline": "Delta", "stops": 0}
-            ],
+            "best_flights": [{"price": 299, "airline": "Delta", "stops": 0}],
             "other_flights": [],
             "price_insights": {"lowest": 299, "highest": 599},
         }
@@ -152,7 +149,11 @@ class TestSerpAPIClient:
         """Test successful event search via SerpAPI."""
         mock_response = {
             "events": [
-                {"title": "Concert", "date": "2025-06-20", "venue": "Madison Square Garden"}
+                {
+                    "title": "Concert",
+                    "date": "2025-06-20",
+                    "venue": "Madison Square Garden",
+                }
             ]
         }
 
@@ -285,7 +286,9 @@ class TestAmadeusClientWrapper:
         mock_amadeus = Mock()
         mock_response = Mock()
         mock_response.body = {"data": [{"hotelId": "PARXYZ", "name": "Hotel Paris"}]}
-        mock_amadeus.reference_data.locations.hotels.by_city.get.return_value = mock_response
+        mock_amadeus.reference_data.locations.hotels.by_city.get.return_value = (
+            mock_response
+        )
 
         wrapper = AmadeusClientWrapper(mock_amadeus)
         result_str = wrapper.search_hotels_by_city(cityCode="PAR")
@@ -299,10 +302,14 @@ class TestAmadeusClientWrapper:
         mock_amadeus = Mock()
         mock_response = Mock()
         mock_response.body = {"data": [{"hotelId": "PARXYZ"}]}
-        mock_amadeus.reference_data.locations.hotels.by_geocode.get.return_value = mock_response
+        mock_amadeus.reference_data.locations.hotels.by_geocode.get.return_value = (
+            mock_response
+        )
 
         wrapper = AmadeusClientWrapper(mock_amadeus)
-        result_str = wrapper.search_hotels_by_geocode(latitude=48.8566, longitude=2.3522)
+        result_str = wrapper.search_hotels_by_geocode(
+            latitude=48.8566, longitude=2.3522
+        )
 
         result = json.loads(result_str)
         assert "data" in result
@@ -326,7 +333,9 @@ class TestAmadeusClientWrapper:
         mock_amadeus.shopping.hotel_offers.get.return_value = mock_response
 
         wrapper = AmadeusClientWrapper(mock_amadeus)
-        result_str = wrapper.search_hotel_offers(cityCode="PAR", checkInDate="2025-06-15")
+        result_str = wrapper.search_hotel_offers(
+            cityCode="PAR", checkInDate="2025-06-15"
+        )
 
         result = json.loads(result_str)
         assert "data" in result
@@ -489,7 +498,9 @@ class TestExchangeRateClient:
         assert "test-exchange-key-12345" not in str(result)
         assert "test-exchange-key-12345" not in result.get("error", "")
         # Verify we get a user-friendly error without implementation details
-        assert "currency" in result["error"].lower() or "failed" in result["error"].lower()
+        assert (
+            "currency" in result["error"].lower() or "failed" in result["error"].lower()
+        )
         # Ensure no URL is exposed
         assert "exchangerate-api.com" not in result.get("error", "")
 

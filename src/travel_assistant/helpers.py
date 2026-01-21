@@ -2,16 +2,18 @@
 
 import os
 import uuid
-import requests
-from typing import Dict, Optional, Any
 from datetime import datetime
+from typing import Any
 
-from geopy.geocoders import Nominatim
+import requests
 from geopy.extra.rate_limiter import RateLimiter
+from geopy.geocoders import Nominatim
+
+# Re-export accessibility functions
 from mcp_accessibility_models import (
-    extract_hotel_accessibility,
     extract_amadeus_hotel_accessibility,
     extract_flight_accessibility_from_amadeus,
+    extract_hotel_accessibility,
 )
 
 # Module-level geolocator (initialized once, reused across requests)
@@ -54,27 +56,28 @@ def get_geolocator():
 
 def sanitize_url_for_logging(url: str) -> str:
     """Sanitize URLs by replacing API keys with [REDACTED].
-    
+
     Handles common API key patterns:
     - Path-based keys: /v6/{api_key}/pair/... -> /v6/[REDACTED]/pair/...
     - Query parameters: ?api_key=xxx -> ?api_key=[REDACTED]
     - Query parameters: &api_key=xxx -> &api_key=[REDACTED]
-    
+
     Args:
         url: URL that may contain API keys
-        
+
     Returns:
         Sanitized URL with API keys replaced by [REDACTED]
     """
     import re
+
     # Pattern 1: Path-based API keys (ExchangeRate-API style: /v6/{hex_key}/)
-    url = re.sub(r'/v6/[a-f0-9]+/', '/v6/[REDACTED]/', url)
+    url = re.sub(r"/v6/[a-f0-9]+/", "/v6/[REDACTED]/", url)
     # Pattern 2: Query parameter API keys
-    url = re.sub(r'([?&])api_key=[^&]+', r'\1api_key=[REDACTED]', url)
+    url = re.sub(r"([?&])api_key=[^&]+", r"\1api_key=[REDACTED]", url)
     return url
 
 
-def format_amadeus_response(response_body: Dict[str, Any]) -> Dict[str, Any]:
+def format_amadeus_response(response_body: dict[str, Any]) -> dict[str, Any]:
     """Format Amadeus API response with metadata.
 
     Args:
@@ -89,7 +92,7 @@ def format_amadeus_response(response_body: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
-def format_error_response(error_msg: str) -> Dict[str, str]:
+def format_error_response(error_msg: str) -> dict[str, str]:
     """Format error response consistently across all tools.
 
     Args:
@@ -102,10 +105,10 @@ def format_error_response(error_msg: str) -> Dict[str, str]:
 
 
 def build_optional_params(
-    required_params: Dict[str, Any],
-    optional_params: Dict[str, Any],
-    none_check_fields: Optional[set] = None
-) -> Dict[str, Any]:
+    required_params: dict[str, Any],
+    optional_params: dict[str, Any],
+    none_check_fields: set | None = None,
+) -> dict[str, Any]:
     """Build API parameter dict with optional parameter handling.
 
     Handles two types of optional parameters:
@@ -135,7 +138,7 @@ def build_optional_params(
     return params
 
 
-def get_nws_headers() -> Dict[str, str]:
+def get_nws_headers() -> dict[str, str]:
     """Get headers for NWS API requests with required User-Agent."""
     return {
         "User-Agent": "TravelAssistantMCP/2.0 (travel-assistant, support@example.com)",
@@ -143,7 +146,7 @@ def get_nws_headers() -> Dict[str, str]:
     }
 
 
-def make_nws_request(endpoint: str) -> Optional[Dict[str, Any]]:
+def make_nws_request(endpoint: str) -> dict[str, Any] | None:
     """Make a request to the NWS API with proper error handling."""
     try:
         response = requests.get(endpoint, headers=get_nws_headers(), timeout=10)
@@ -157,6 +160,7 @@ def make_nws_request(endpoint: str) -> Optional[Dict[str, Any]]:
 # =====================================================================
 # VALIDATION HELPERS
 # =====================================================================
+
 
 def validate_date_format(date_str: str, field_name: str = "date") -> str:
     """Validate date is in YYYY-MM-DD format.
@@ -172,7 +176,7 @@ def validate_date_format(date_str: str, field_name: str = "date") -> str:
         ValueError: If date format is invalid
     """
     try:
-        datetime.strptime(date_str, '%Y-%m-%d')
+        datetime.strptime(date_str, "%Y-%m-%d")
         return date_str
     except ValueError:
         raise ValueError(f"{field_name} must be in YYYY-MM-DD format")
@@ -193,5 +197,3 @@ def validate_currency_code(code: str) -> str:
     if not code or len(code) != 3 or not code.isalpha():
         raise ValueError("Currency code must be 3 letters (e.g., USD, EUR, GBP)")
     return code.upper()
-
-

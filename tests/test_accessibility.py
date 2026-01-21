@@ -1,17 +1,15 @@
 """Tests for accessibility features in travel assistant."""
 
-import pytest
 from travel_assistant.helpers import (
-    extract_hotel_accessibility,
     extract_amadeus_hotel_accessibility,
     extract_flight_accessibility_from_amadeus,
+    extract_hotel_accessibility,
 )
 from travel_assistant.models import (
+    AccessibilityRequest,
     FlightAccessibility,
     HotelAccessibility,
-    AccessibilityRequest,
 )
-
 
 # =====================================================================
 # HOTEL ACCESSIBILITY EXTRACTION TESTS
@@ -28,8 +26,8 @@ class TestHotelAccessibilityExtraction:
             "amenities": [
                 {"id": 1, "name": "WiFi"},
                 {"id": 53, "name": "Wheelchair accessible"},
-                {"id": 5, "name": "Parking"}
-            ]
+                {"id": 5, "name": "Parking"},
+            ],
         }
         accessibility = extract_hotel_accessibility(hotel_property)
         assert accessibility["wheelchair_accessible"] is True
@@ -40,10 +38,7 @@ class TestHotelAccessibilityExtraction:
         """Test hotel without wheelchair accessibility."""
         hotel_property = {
             "name": "Standard Hotel",
-            "amenities": [
-                {"id": 1, "name": "WiFi"},
-                {"id": 5, "name": "Parking"}
-            ]
+            "amenities": [{"id": 1, "name": "WiFi"}, {"id": 5, "name": "Parking"}],
         }
         accessibility = extract_hotel_accessibility(hotel_property)
         assert accessibility["wheelchair_accessible"] is False
@@ -51,19 +46,14 @@ class TestHotelAccessibilityExtraction:
 
     def test_extract_hotel_without_amenities(self):
         """Test hotel with no amenities field."""
-        hotel_property = {
-            "name": "Simple Hotel"
-        }
+        hotel_property = {"name": "Simple Hotel"}
         accessibility = extract_hotel_accessibility(hotel_property)
         assert accessibility["wheelchair_accessible"] is False
         assert accessibility["wheelchair_amenity_id"] == 53
 
     def test_extract_hotel_empty_amenities(self):
         """Test hotel with empty amenities list."""
-        hotel_property = {
-            "name": "Empty Hotel",
-            "amenities": []
-        }
+        hotel_property = {"name": "Empty Hotel", "amenities": []}
         accessibility = extract_hotel_accessibility(hotel_property)
         assert accessibility["wheelchair_accessible"] is False
 
@@ -74,8 +64,8 @@ class TestHotelAccessibilityExtraction:
             "amenities": [
                 "WiFi",  # String instead of dict
                 {"id": 53},  # Valid
-                None  # None value
-            ]
+                None,  # None value
+            ],
         }
         accessibility = extract_hotel_accessibility(hotel_property)
         assert accessibility["wheelchair_accessible"] is True
@@ -92,8 +82,8 @@ class TestAmadeusHotelAccessibilityExtraction:
                 {"description": "Wheelchair accessible rooms"},
                 {"description": "Accessible bathroom with grab bars"},
                 {"description": "Elevator"},
-                {"description": "Accessible parking"}
-            ]
+                {"description": "Accessible parking"},
+            ],
         }
         accessibility = extract_amadeus_hotel_accessibility(hotel_data)
         assert accessibility["wheelchair_accessible"] is True
@@ -107,40 +97,46 @@ class TestAmadeusHotelAccessibilityExtraction:
             "facilities": [
                 {"description": "WiFi"},
                 {"description": "Restaurant"},
-                {"description": "Gym"}
-            ]
+                {"description": "Gym"},
+            ],
         }
         accessibility = extract_amadeus_hotel_accessibility(hotel_data)
         assert accessibility["wheelchair_accessible"] is False
 
     def test_extract_amadeus_no_facilities(self):
         """Test Amadeus hotel with no facilities."""
-        hotel_data = {
-            "name": "Simple Hotel"
-        }
+        hotel_data = {"name": "Simple Hotel"}
         accessibility = extract_amadeus_hotel_accessibility(hotel_data)
         assert accessibility["wheelchair_accessible"] is False
         assert accessibility["facility_list"] == []
 
     def test_extract_amadeus_accessibility_keywords(self):
         """Test detection of various accessibility keywords."""
-        keywords = ["wheelchair", "accessible", "mobility", "elevator", "ramp", "parking", "bathroom"]
+        keywords = [
+            "wheelchair",
+            "accessible",
+            "mobility",
+            "elevator",
+            "ramp",
+            "parking",
+            "bathroom",
+        ]
 
         for keyword in keywords:
             hotel_data = {
-                "facilities": [
-                    {"description": f"Feature with {keyword} available"}
-                ]
+                "facilities": [{"description": f"Feature with {keyword} available"}]
             }
             accessibility = extract_amadeus_hotel_accessibility(hotel_data)
-            assert accessibility["wheelchair_accessible"] is True, f"Failed for keyword: {keyword}"
+            assert accessibility["wheelchair_accessible"] is True, (
+                f"Failed for keyword: {keyword}"
+            )
 
     def test_extract_amadeus_case_insensitive(self):
         """Test that accessibility keyword matching is case-insensitive."""
         hotel_data = {
             "facilities": [
                 {"description": "WHEELCHAIR ACCESSIBLE ROOMS"},
-                {"description": "Accessible BATHROOM"}
+                {"description": "Accessible BATHROOM"},
             ]
         }
         accessibility = extract_amadeus_hotel_accessibility(hotel_data)
@@ -165,7 +161,7 @@ class TestFlightAccessibilityExtraction:
             "oneWay": False,
             "lastTicketingDate": "2025-02-20",
             "numberOfBookableSeats": 4,
-            "itineraries": []
+            "itineraries": [],
         }
         accessibility = extract_flight_accessibility_from_amadeus(flight_offer)
         assert accessibility["wheelchair_available"] is False
@@ -204,7 +200,7 @@ class TestAccessibilityRequestCreation:
         """Test creating accessibility request for wheelchair user."""
         request = AccessibilityRequest(
             wheelchair_user=True,
-            special_requirements="Manual wheelchair, needs accessible bathroom"
+            special_requirements="Manual wheelchair, needs accessible bathroom",
         )
         assert request.wheelchair_user is True
         assert "wheelchair" in request.special_requirements.lower()
@@ -213,7 +209,7 @@ class TestAccessibilityRequestCreation:
         """Test creating accessibility request for deaf traveler."""
         request = AccessibilityRequest(
             deaf=True,
-            special_requirements="Visual alerts needed, no audio announcements"
+            special_requirements="Visual alerts needed, no audio announcements",
         )
         assert request.deaf is True
         assert request.blind is False
@@ -221,8 +217,7 @@ class TestAccessibilityRequestCreation:
     def test_request_for_blind_traveler(self):
         """Test creating accessibility request for blind traveler."""
         request = AccessibilityRequest(
-            blind=True,
-            special_requirements="Braille and audio guide needed"
+            blind=True, special_requirements="Braille and audio guide needed"
         )
         assert request.blind is True
         assert request.deaf is False
@@ -233,7 +228,7 @@ class TestAccessibilityRequestCreation:
             wheelchair_user=True,
             reduced_mobility=True,
             companion_required=True,
-            special_requirements="Needs both wheelchair and assistance"
+            special_requirements="Needs both wheelchair and assistance",
         )
         assert request.wheelchair_user is True
         assert request.reduced_mobility is True
@@ -244,7 +239,7 @@ class TestAccessibilityRequestCreation:
         request = AccessibilityRequest(
             stretcher_case=True,
             companion_required=True,
-            special_requirements="Requires medical oxygen and constant monitoring"
+            special_requirements="Requires medical oxygen and constant monitoring",
         )
         assert request.stretcher_case is True
         assert request.companion_required is True
@@ -266,22 +261,17 @@ class TestAccessibilityScenarios:
                 "name": "Luxury Hotel",
                 "amenities": [
                     {"id": 1, "name": "WiFi"},
-                    {"id": 53, "name": "Wheelchair accessible"}
-                ]
+                    {"id": 53, "name": "Wheelchair accessible"},
+                ],
             },
-            {
-                "name": "Budget Hotel",
-                "amenities": [
-                    {"id": 1, "name": "WiFi"}
-                ]
-            },
+            {"name": "Budget Hotel", "amenities": [{"id": 1, "name": "WiFi"}]},
             {
                 "name": "Accessible Inn",
                 "amenities": [
                     {"id": 53, "name": "Wheelchair accessible"},
-                    {"id": 5, "name": "Parking"}
-                ]
-            }
+                    {"id": 5, "name": "Parking"},
+                ],
+            },
         ]
 
         # Extract accessibility for each hotel
@@ -299,7 +289,7 @@ class TestAccessibilityScenarios:
         """Test flight accessibility info for deaf traveler."""
         request = AccessibilityRequest(
             deaf=True,
-            special_requirements="Needs visual alerts, no audio announcements"
+            special_requirements="Needs visual alerts, no audio announcements",
         )
 
         # Simulate flight search
@@ -316,7 +306,7 @@ class TestAccessibilityScenarios:
             wheelchair_user=True,
             deaf=True,
             companion_required=True,
-            special_requirements="Wheelchair user who is deaf, needs both visual alerts and accessible facilities, traveling with companion"
+            special_requirements="Wheelchair user who is deaf, needs both visual alerts and accessible facilities, traveling with companion",
         )
 
         # Verify all accessibility needs are captured
@@ -337,8 +327,7 @@ class TestAccessibilityDataValidation:
     def test_flight_accessibility_schema(self):
         """Test that FlightAccessibility has valid schema."""
         accessibility = FlightAccessibility(
-            wheelchair_available=True,
-            special_service_codes=["WCHR", "WCHS"]
+            wheelchair_available=True, special_service_codes=["WCHR", "WCHS"]
         )
         # Validate schema
         schema = FlightAccessibility.model_json_schema()
@@ -349,7 +338,7 @@ class TestAccessibilityDataValidation:
         """Test that HotelAccessibility has valid schema."""
         accessibility = HotelAccessibility(
             wheelchair_accessible=True,
-            facility_list=["Roll-in shower", "Accessible parking"]
+            facility_list=["Roll-in shower", "Accessible parking"],
         )
         schema = HotelAccessibility.model_json_schema()
         assert "properties" in schema
@@ -357,10 +346,7 @@ class TestAccessibilityDataValidation:
 
     def test_accessibility_request_schema(self):
         """Test that AccessibilityRequest has valid schema."""
-        request = AccessibilityRequest(
-            wheelchair_user=True,
-            deaf=True
-        )
+        request = AccessibilityRequest(wheelchair_user=True, deaf=True)
         schema = AccessibilityRequest.model_json_schema()
         assert "properties" in schema
         assert "wheelchair_user" in schema["properties"]
@@ -371,7 +357,7 @@ class TestAccessibilityDataValidation:
         accessibility = HotelAccessibility(
             wheelchair_accessible=True,
             accessible_parking=True,
-            facility_list=["Wheelchair accessible", "Accessible parking"]
+            facility_list=["Wheelchair accessible", "Accessible parking"],
         )
         # Should be serializable to JSON
         json_data = accessibility.model_dump_json()
@@ -384,7 +370,7 @@ class TestAccessibilityDataValidation:
             "wheelchair_accessible": True,
             "accessible_room_available": True,
             "wheelchair_amenity_id": 53,
-            "facility_list": ["Wheelchair accessible"]
+            "facility_list": ["Wheelchair accessible"],
         }
         accessibility = HotelAccessibility(**data)
         assert accessibility.wheelchair_accessible is True

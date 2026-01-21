@@ -1,0 +1,32 @@
+name: travel-assistant
+version: 4.0.0
+description: Unified MCP server providing comprehensive travel planning services
+
+runtime:
+  python: '3.11'
+
+transport:
+  - stdio
+  - http
+
+env:
+  LOG_LEVEL: INFO
+  PYTHONUNBUFFERED: '1'
+
+resources:
+  memory: 1Gi
+  cpu: 1.0
+
+scaling:
+  min_instances: 0
+  max_instances: 10
+
+health_check:
+  path: /health
+  interval: 30s
+
+secrets:
+  - SERPAPI_KEY
+  - AMADEUS_API_KEY
+  - AMADEUS_API_SECRET
+  - EXCHANGE_RATE_API_KEY

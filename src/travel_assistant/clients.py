@@ -1,22 +1,23 @@
 """API client wrappers for the Travel Assistant MCP server."""
 
 import json
-import requests
-from typing import Dict, Any, Optional
 from datetime import datetime
+from typing import Any
 
-from amadeus import Client as AmadeusClient, ResponseError
+import requests
+from amadeus import Client as AmadeusClient
+from amadeus import ResponseError
 
 from .helpers import (
-    get_serpapi_key,
     get_exchange_rate_api_key,
     get_geolocator,
+    get_serpapi_key,
 )
-
 
 # =====================================================================
 # SERPAPI CLIENT
 # =====================================================================
+
 
 class SerpAPIClient:
     """Client for Google Flights, Hotels, Events, and Finance via SerpAPI."""
@@ -28,7 +29,7 @@ class SerpAPIClient:
         except ValueError:
             self.api_key = None
 
-    def _request(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def _request(self, params: dict[str, Any]) -> dict[str, Any]:
         """Make a request to SerpAPI."""
         if not self.api_key:
             return {"error": "SERPAPI_KEY environment variable not set"}
@@ -40,17 +41,17 @@ class SerpAPIClient:
         except requests.exceptions.RequestException as e:
             return {"error": f"SerpAPI request failed: {str(e)}"}
 
-    def search_flights(self, **params) -> Dict[str, Any]:
+    def search_flights(self, **params) -> dict[str, Any]:
         """Search for flights using Google Flights."""
         params["engine"] = "google_flights"
         return self._request(params)
 
-    def search_hotels(self, **params) -> Dict[str, Any]:
+    def search_hotels(self, **params) -> dict[str, Any]:
         """Search for hotels using Google Hotels."""
         params["engine"] = "google_hotels"
         return self._request(params)
 
-    def search_events(self, **params) -> Dict[str, Any]:
+    def search_events(self, **params) -> dict[str, Any]:
         """Search for events using Google Events."""
         params["engine"] = "google_events"
         return self._request(params)
@@ -59,6 +60,7 @@ class SerpAPIClient:
 # =====================================================================
 # AMADEUS CLIENT WRAPPER
 # =====================================================================
+
 
 class AmadeusClientWrapper:
     """Wrapper around Amadeus SDK client."""
@@ -110,7 +112,9 @@ class AmadeusClientWrapper:
     def search_hotels_by_geocode(self, **params) -> str:
         """Search for hotels by coordinates using Amadeus."""
         try:
-            response = self.client.reference_data.locations.hotels.by_geocode.get(**params)
+            response = self.client.reference_data.locations.hotels.by_geocode.get(
+                **params
+            )
             result = response.body
             result["provider"] = "Amadeus GDS"
             result["search_timestamp"] = datetime.now().isoformat()
@@ -147,10 +151,12 @@ class AmadeusClientWrapper:
         except ResponseError as e:
             return json.dumps({"error": f"Amadeus API error: {str(e)}"})
         except AttributeError as e:
-            return json.dumps({
-                "error": f"Tours and Activities API not available: {str(e)}",
-                "note": "This API might require a newer SDK version or special access"
-            })
+            return json.dumps(
+                {
+                    "error": f"Tours and Activities API not available: {str(e)}",
+                    "note": "This API might require a newer SDK version or special access",
+                }
+            )
         except Exception as e:
             return json.dumps({"error": f"Unexpected error: {str(e)}"})
 
@@ -165,10 +171,12 @@ class AmadeusClientWrapper:
         except ResponseError as e:
             return json.dumps({"error": f"Amadeus API error: {str(e)}"})
         except AttributeError as e:
-            return json.dumps({
-                "error": f"Tours and Activities API not available: {str(e)}",
-                "note": "This API might require a newer SDK version or special access"
-            })
+            return json.dumps(
+                {
+                    "error": f"Tours and Activities API not available: {str(e)}",
+                    "note": "This API might require a newer SDK version or special access",
+                }
+            )
         except Exception as e:
             return json.dumps({"error": f"Unexpected error: {str(e)}"})
 
@@ -176,6 +184,7 @@ class AmadeusClientWrapper:
 # =====================================================================
 # EXCHANGERATE API CLIENT
 # =====================================================================
+
 
 class ExchangeRateClient:
     """Client for currency conversion via ExchangeRate-API."""
@@ -187,7 +196,9 @@ class ExchangeRateClient:
         except ValueError:
             self.api_key = None
 
-    def convert(self, from_currency: str, to_currency: str, amount: float = 1.0) -> Dict[str, Any]:
+    def convert(
+        self, from_currency: str, to_currency: str, amount: float = 1.0
+    ) -> dict[str, Any]:
         """Convert between currencies."""
         if not self.api_key:
             return {"error": "EXCHANGE_RATE_API_KEY environment variable not set"}
@@ -215,10 +226,12 @@ class ExchangeRateClient:
                 "search_timestamp": datetime.now().isoformat(),
                 "provider": "exchangerate-api",
             }
-        except requests.exceptions.RequestException as e:
+        except requests.exceptions.RequestException:
             # SECURITY: Never expose the URL which contains the API key
-            return {"error": "Currency API request failed. Please check currency codes and try again."}
-        except Exception as e:
+            return {
+                "error": "Currency API request failed. Please check currency codes and try again."
+            }
+        except Exception:
             # SECURITY: Generic error without exposing implementation details
             return {"error": "Currency conversion failed. Please try again."}
 
@@ -226,6 +239,7 @@ class ExchangeRateClient:
 # =====================================================================
 # NOMINATIM GEOCODING CLIENT
 # =====================================================================
+
 
 class GeocodingClient:
     """Client for geocoding and reverse geocoding via Nominatim."""
@@ -240,8 +254,8 @@ class GeocodingClient:
         timeout: int = 10,
         language: str = "en",
         addressdetails: bool = True,
-        country_codes: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        country_codes: str | None = None,
+    ) -> dict[str, Any]:
         """Geocode a location name to coordinates."""
         try:
             params = {
@@ -288,7 +302,7 @@ class GeocodingClient:
 
     def reverse_geocode(
         self, latitude: float, longitude: float, language: str = "en"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Reverse geocode coordinates to location."""
         try:
             params = {
@@ -298,7 +312,9 @@ class GeocodingClient:
             result = self.reverse_limiter((latitude, longitude), **params)
 
             if not result:
-                return {"error": f"No location found for coordinates {latitude}, {longitude}"}
+                return {
+                    "error": f"No location found for coordinates {latitude}, {longitude}"
+                }
 
             return {
                 "latitude": latitude,

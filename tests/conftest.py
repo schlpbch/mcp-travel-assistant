@@ -1,6 +1,8 @@
 """Shared pytest fixtures for travel_assistant tests."""
-import pytest
+
 from unittest.mock import Mock
+
+import pytest
 
 
 @pytest.fixture(autouse=True)

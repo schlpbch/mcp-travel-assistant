@@ -166,9 +166,6 @@ replit.nix
 .direnv/
 .envrc
 
-# Lock files
-uv.lock
-
 # Shell scripts and deployment files
 *.sh
 deploy.sh

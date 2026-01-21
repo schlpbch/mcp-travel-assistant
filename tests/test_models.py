@@ -1,31 +1,29 @@
 """Tests for travel_assistant.models module."""
 
 import pytest
-from datetime import datetime, timedelta
 from pydantic import ValidationError
+
 from travel_assistant.models import (
-    AppContext,
-    FlightSearchParams,
-    AmadeusFlightSearchParams,
-    HotelSearchParams,
-    AmadeusHotelOfferParams,
-    EventSearchParams,
+    AccessibilityRequest,
     ActivitySearchParams,
+    AmadeusEmissions,
+    AmadeusFlightSearchParams,
+    AmadeusHotelOfferParams,
+    APIResponse,
+    CurrencyConversion,
+    CurrencyParams,
+    CurrentWeather,
+    DistanceParams,
+    ErrorResponse,
+    EventSearchParams,
+    FlightAccessibility,
+    FlightSearchParams,
     GeocodeParams,
     GeocodeResult,
-    DistanceParams,
-    WeatherParams,
-    CurrentWeather,
-    WeatherForecast,
-    CurrencyParams,
-    CurrencyConversion,
-    APIResponse,
-    ErrorResponse,
     GoogleFlightsEmissions,
-    AmadeusEmissions,
-    FlightAccessibility,
     HotelAccessibility,
-    AccessibilityRequest,
+    HotelSearchParams,
+    WeatherParams,
 )
 
 
@@ -746,7 +744,11 @@ class TestHotelAccessibility:
     def test_hotel_accessibility_bathroom_types(self):
         """Test HotelAccessibility with various bathroom types."""
         accessibility = HotelAccessibility(
-            accessible_bathroom_types=["roll-in shower", "grab bars", "accessible toilet"],
+            accessible_bathroom_types=[
+                "roll-in shower",
+                "grab bars",
+                "accessible toilet",
+            ],
         )
         assert len(accessibility.accessible_bathroom_types) == 3
         assert "roll-in shower" in accessibility.accessible_bathroom_types
@@ -901,7 +903,9 @@ class TestAccessibilityRequest:
 
     def test_accessibility_request_special_requirements_text(self):
         """Test AccessibilityRequest with detailed special requirements."""
-        special_needs = "Traveling with service dog, needs accessible room with space for animal"
+        special_needs = (
+            "Traveling with service dog, needs accessible room with space for animal"
+        )
         request = AccessibilityRequest(
             reduced_mobility=False,
             special_requirements=special_needs,

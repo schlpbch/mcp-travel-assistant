@@ -1,31 +1,26 @@
-import os
 import json
-import requests
-from typing import List, Dict, Optional, Any
-from datetime import datetime
-from dataclasses import dataclass
-from contextlib import asynccontextmanager
+import os
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
 
-from dotenv import load_dotenv
-from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
-
+import requests
 from amadeus import Client, ResponseError
-from fastmcp import FastMCP, Context
+from dotenv import load_dotenv
+from fastmcp import Context, FastMCP
+from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
 
 from travel_assistant.clients import SerpAPIClient
 from travel_assistant.helpers import (
-    get_serpapi_key,
-    get_exchange_rate_api_key,
-    get_geolocator,
-    get_nws_headers,
-    make_nws_request,
+    build_optional_params,
+    extract_flight_accessibility_from_amadeus,
+    extract_hotel_accessibility,
     format_amadeus_response,
     format_error_response,
-    build_optional_params,
-    extract_hotel_accessibility,
-    extract_amadeus_hotel_accessibility,
-    extract_flight_accessibility_from_amadeus,
+    get_exchange_rate_api_key,
+    get_geolocator,
 )
 
 load_dotenv()
@@ -50,7 +45,7 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
     if api_key and api_secret:
         try:
             amadeus_client = Client(client_id=api_key, client_secret=api_secret)
-        except Exception as e:
+        except Exception:
             # Log but don't fail startup - Amadeus tools will handle missing client gracefully
             pass
 
@@ -72,7 +67,7 @@ async def health_check(request):
         "status": "healthy",
         "service": "Travel Concierge",
         "timestamp": datetime.now().isoformat(),
-        "version": "1.0.0",
+        "version": "4.0.0",
     }
 
 
@@ -89,7 +84,7 @@ def search_flights_serpapi(
     departure_id: str,
     arrival_id: str,
     outbound_date: str,
-    return_date: Optional[str] = None,
+    return_date: str | None = None,
     trip_type: int = 1,
     adults: int = 1,
     children: int = 0,
@@ -100,7 +95,7 @@ def search_flights_serpapi(
     country: str = "us",
     language: str = "en",
     max_results: int = 10,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Searches Google Flights for best deals and routes with carbon emissions data. Takes departure location, arrival destination, outbound date, optional return date, passenger counts by type (adults, children, infants), seat class, currency, language, and max results. Returns curated flight options with prices, schedules, airline booking links, and CO2 emissions per flight ranked by value."""
 
     try:
@@ -158,7 +153,9 @@ def search_flights_serpapi(
                 "trip_type": (
                     "Round trip"
                     if trip_type == 1
-                    else "One way" if trip_type == 2 else "Multi-city"
+                    else "One way"
+                    if trip_type == 2
+                    else "Multi-city"
                 ),
                 "passengers": {
                     "adults": adults,
@@ -313,21 +310,21 @@ def search_hotels_serpapi(
     check_out_date: str,
     adults: int = 2,
     children: int = 0,
-    children_ages: Optional[List[int]] = None,
+    children_ages: list[int] | None = None,
     currency: str = "USD",
     country: str = "us",
     language: str = "en",
-    sort_by: Optional[int] = None,
-    hotel_class: Optional[List[int]] = None,
-    amenities: Optional[List[int]] = None,
-    property_types: Optional[List[int]] = None,
-    brands: Optional[List[int]] = None,
+    sort_by: int | None = None,
+    hotel_class: list[int] | None = None,
+    amenities: list[int] | None = None,
+    property_types: list[int] | None = None,
+    brands: list[int] | None = None,
     free_cancellation: bool = False,
     special_offers: bool = False,
     vacation_rentals: bool = False,
-    bedrooms: Optional[int] = None,
+    bedrooms: int | None = None,
     max_results: int = 20,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Searches Google Hotels for accommodations including hotels, vacation rentals, and boutiques. Takes destination, check-in/out dates, guest count, optional filters (star rating, amenities, brands, property types, free cancellation, special offers). Returns available options with prices, ratings, reviews, photos, and direct booking links."""
 
     try:
@@ -561,13 +558,13 @@ def search_hotel_offers_amadeus(
 @mcp.tool()
 def search_events_serpapi(
     query: str,
-    location: Optional[str] = None,
-    date_filter: Optional[str] = None,
-    event_type: Optional[str] = None,
+    location: str | None = None,
+    date_filter: str | None = None,
+    event_type: str | None = None,
     language: str = "en",
     country: str = "us",
     max_results: int = 20,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Searches Google Events for local festivals, shows, and experiences. Takes search query (e.g., concerts, festivals), location, optional date filter, event type, language, and country. Returns curated events with dates, times, locations, descriptions, and booking information."""
 
     try:
@@ -702,8 +699,8 @@ def geocode_location(
     timeout: int = 10,
     language: str = "en",
     addressdetails: bool = True,
-    country_codes: Optional[str] = None,
-) -> Dict[str, Any]:
+    country_codes: str | None = None,
+) -> dict[str, Any]:
     """Converts place names and addresses to precise geographic coordinates. Takes location query, optional language preference, country filtering (country codes), and match count preference. Returns latitude/longitude, full address details, timezone info, and disambiguation data. Use for flight/hotel searches, activity mapping, and route planning."""
 
     try:
@@ -769,7 +766,7 @@ def geocode_location(
 @mcp.tool()
 def calculate_distance(
     lat1: float, lon1: float, lat2: float, lon2: float, unit: str = "km"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Calculates geodetic distance between two geographic coordinates. Takes latitude/longitude pairs for two locations and unit preference (km, miles, nm). Returns distance in requested unit plus all formats. Use for route optimization, travel time estimation, and itinerary planning."""
 
     try:
@@ -815,7 +812,7 @@ def calculate_distance(
 @mcp.tool()
 def convert_currency(
     from_currency: str, to_currency: str, amount: float = 1.0, language: str = "en"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Converts amounts between currencies using real-time exchange rates via ExchangeRate-API. Takes source and target currency codes (USD, EUR, GBP, etc.), optional amount (default 1.0), returns converted amount and current exchange rate. Essential for international travel budgeting, expense tracking, and price comparisons across currencies."""
     try:
         api_key = get_exchange_rate_api_key()
@@ -849,12 +846,12 @@ def convert_currency(
             },
         }
         return processed_results
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException:
         # SECURITY: Never expose the URL which contains the API key
         return {
             "error": "Currency API request failed. Please check currency codes and try again."
         }
-    except Exception as e:
+    except Exception:
         # SECURITY: Generic error without exposing implementation details
         return {"error": "Currency conversion failed. Please try again."}
 
@@ -1450,7 +1447,7 @@ You're helping plan an inclusive, accessible trip to {destination}"""
     prompt += f" for {duration_days} days with {travelers} traveler{'s' if travelers != 1 else ''}."
 
     if accessibility_needs:
-        prompt += f"\n\n**Accessibility Requirements:**\n"
+        prompt += "\n\n**Accessibility Requirements:**\n"
         for i, need in enumerate(accessibility_needs, 1):
             prompt += f"{i}. {need}\n"
 
@@ -1562,7 +1559,7 @@ def wheelchair_accessible_itinerary(
 
     prompt = f"""♿ **WHEELCHAIR-ACCESSIBLE {duration_days}-DAY ITINERARY FOR {destination.upper()}** ♿
 
-**Mobility Profile:** {mobility_level.replace('_', ' ').title()}"""
+**Mobility Profile:** {mobility_level.replace("_", " ").title()}"""
 
     if companion_available:
         prompt += "\n**Companion/Assistant:** Available"
@@ -1903,7 +1900,6 @@ Travel can be rich, meaningful, and fully accessible!
 
 def main():
     """Entry point for the Travel Assistant MCP server."""
-    import sys
     import argparse
 
     parser = argparse.ArgumentParser(description="Travel Assistant MCP Server")
