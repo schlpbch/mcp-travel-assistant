@@ -1948,7 +1948,7 @@ wheels = [
 [[package]]
 name = "swiss-ai-mcp-commons"
 version = "1.0.0"
-source = { git = "https://github.com/schlpbch/swiss-ai-mcp-commons.git?rev=v1.0.1#804fcd897fe0511769b2b96e6bcb3a5e70ba7187" }
+source = { git = "https://github.com/schlpbch/swiss-ai-mcp-commons.git?rev=master#3bf1b9ad9ee63e4a59e0a962cbc0b33a977bddf8" }
 dependencies = [
     { name = "httpx" },
     { name = "pydantic" },
@@ -2048,7 +2048,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "requests", specifier = ">=2.31.0" },
-    { name = "swiss-ai-mcp-commons", git = "https://github.com/schlpbch/swiss-ai-mcp-commons.git?rev=v1.0.1" },
+    { name = "swiss-ai-mcp-commons", git = "https://github.com/schlpbch/swiss-ai-mcp-commons.git?rev=master" },
 ]
 
 [package.metadata.requires-dev]
